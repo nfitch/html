@@ -1,0 +1,199 @@
+<html>
+  <head>
+   <title>Flashcards!</title>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+   <style type="text/css">
+     body {
+        font-size: 100;
+     }
+     .clear-floats {
+        clear: both;
+     }
+     #number1 {
+        float: left;
+        text-align: right;
+        margin-left: 100;
+        width: 100;
+     }
+     #operator {
+        float: left;
+        width: 100;
+     }
+     #number2 {
+        float: left;
+        text-align: right;
+        width: 100;
+     }
+     #line {
+        width: 200;
+        height: 10;
+        background-color: #000000;
+     }
+     #correct {
+        float: left;
+        width: 100;
+     }
+     #answer {
+        float: left;
+        text-align: right;
+        width: 100;
+     }
+   </style>
+   <script type="text/javascript">
+      //http://jimblackler.net/BackspaceTrap.htm
+      function trapFunction(event) {
+         var keynum;
+         if (window.event) { // eg. IE
+            keynum = window.event.keyCode;
+         } else if (event.which) { // eg. Firefox
+            keynum = event.which;
+         }
+         if (keynum == 8) { // backspace has code 8
+            backspace();
+            return false;
+         }
+         if (keynum >= 48 && keynum <= 58) {
+            key(keynum - 48);
+         }
+         return true;
+      }
+      document.onkeyup = function(event) {
+         return true;
+      }
+      document.onkeydown = trapFunction; // IE, Firefox, Safari
+      //document.onkeypress = trapFunction; // only Opera needs the backspace nullifying in onkeypress
+
+      var CORRECT = '&#10004;';
+      var INCORRECT = '&#10008;';
+      var QUESTION = '?';
+
+      function set(k, v) {
+         $('#' + k)[0].innerHTML = v;
+      }
+      function get(k) {
+         return ($('#' + k)[0].innerHTML);
+      }
+
+      function r(min, max) {
+         return (Math.floor(Math.random() * (max - min + 1)) + min);
+      }
+
+      function backspace() {
+         var answer = get('answer');
+         answer = answer.substring(0, answer.length - 1);
+         set('answer', answer);
+         if (answer.length === 0) {
+            set('correct', QUESTION);
+         }
+      }
+
+      // --- Operations
+      var op = null;
+      var ops = [
+         function add() {
+            this.name = 'addition';
+            this.operator = '+';
+            this.n1 = r(0, 10);
+            this.n2 = r(0, 10);
+            this.answer = this.n1 + this.n2;
+            this.compute = function (a, b) {
+               return (a + b)
+            }
+            return (this);
+         },
+         function subtract() {
+            this.name = 'subtraction';
+            this.operator = '-';
+            this.n1 = r(0, 10);
+            this.n2 = r(0, this.n1);
+            this.answer = this.n1 - this.n2;
+            this.compute = function (a, b) {
+               return (a - b)
+            }
+            return (this);
+         },
+         function multiply() {
+            this.name = 'multiplication';
+            this.operator = 'x';
+            this.n1 = r(0, 12);
+            this.n2 = r(0, 12);
+            this.answer = this.n1 * this.n2;
+            this.compute = function (a, b) {
+               return (a * b)
+            }
+            return (this);
+         }
+      ];
+
+      function key(number) {
+         var answer = get('answer');
+         if (answer === '0') {
+            answer = '';
+         }
+         set('answer', '' + answer + number);
+
+         var answer = op.compute(
+            parseInt(get('number1'), 10),
+            parseInt(get('number2'), 10)
+         );
+         if (answer === parseInt(get('answer'), 10)) {
+            set('correct', CORRECT);
+            nextIn(0.5);
+         } else {
+            set('correct', INCORRECT);
+         }
+      }
+
+      function nextIn(n) {
+         setTimeout(next, n * 1000);
+      }
+
+      function next() {
+         var f = ops[r(0, ops.length - 1)];
+         op = new f();
+         console.log(op);
+         set('number1', op.n1);
+         set('number2', op.n2);
+         set('operator', op.operator);
+         set('correct', QUESTION);
+         set('answer', '');
+      }
+
+      $(function () {
+         next();
+      });
+   </script>
+  </head>
+  <body>
+    <!-- Content goes here -->
+    <div id="number1">0</div>
+    <div class="clear-floats"></div>
+    <div id="operator">+</div>
+    <div id="number2">0</div>
+    <div class="clear-floats"></div>
+    <div id="line"></div>
+    <div class="clear-floats"></div>
+    <div id="correct">?</div>
+    <div id="answer"></div>
+  </body>
+</html>
+
+<!--
+Current Principal Balance  $272,928.26          Effective Interest Rate    3.125%
+Loan Origination Date   06/21/2013        Original Loan Amount    $287,000.00
+First Payment Due Date  08/01/2013        Loan Type   Conventional
+Maturity Date  07/2043        Payment Method    Easy Pay
+
+Jul-1-2043 - Nothing extra
+Jan-1-2037 - 200/mo (- 6 years)
+Sep-1-2026 - 1000/mo (- 17 years)
+Feb-1-2036 - 200/mo + 10000 one time each year (- 7 years)
+Aug-1-2025 - 200/mo + 20000 one time each year (- 18 years)
+Jun-1-2027 - 200/mo + 100000 May 2015, once (- 16 years)
+Nov-1-2019 - 200/mo + 200000 May 2015, once (- 24 years)
+
+2043 - 2036
+$ans = 7
+$ans = 18
+$ans = 17
+-->
