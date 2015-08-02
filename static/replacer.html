@@ -105,8 +105,9 @@ function parse(s) {
          ret.cmds.push(line);
          var matches = line.match(/\$\w+/g);
          for (var j in matches) {
-            if (ret.keys.indexOf(matches[j]) === -1) {
-               ret.keys.push(matches[j].substring(1));
+            var v = matches[j].substring(1); //take off the $
+            if (ret.keys.indexOf(v) === -1) {
+               ret.keys.push(v);
             }
          }
       }
