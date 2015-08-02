@@ -1,0 +1,192 @@
+<html>
+<head>
+<title>Replacer</title>
+<meta charset="UTF-8">
+<style type="text/css">
+textarea {
+   width: 100%;
+   height: 100%;
+}
+* {
+   font-size: 100%;
+   font-family: Courier New;
+}
+</style>
+<script type="text/javascript">
+//Can I get some global variables, please and thanks you?!
+var text = '';
+var parsed; //Intentionally undefined
+
+function ge(s) {
+   return document.getElementById(s);
+}
+
+function replaceBody(s) {
+   ge("body").innerHTML = s;
+}
+
+function instructions() {
+   ge("text").value = '\
+# This is the replacer.  It is meant to help you with "cascading" commands where the\n\
+# output of one command is input to subsequent commands.  Here are the brief\n\
+# instructions:\n\
+# \n\
+# All lines begining with a "#" is a comment and is ignored.\n\
+# \n\
+# If the first line is in the "variable format" (<key>=<value>) then each line until\n\
+# a blank line is read as default values.\n\
+# \n\
+# All other lines are treated as commands.\n\
+# \n\
+# An example (click "Next =>" and see):\n\
+name=george\n\
+occupation=musician\n\
+\n\
+Hello $name!  I heard you\'re a $occupation.\n\
+We should $something.\n\
+';
+}
+
+function input() {
+   //We know we're going Back, so build up text again.
+   if (parsed) {
+      text = '';
+      var vars = getVars();
+      var hasKeys = false;
+      for (var k in vars) {
+         if (vars[k] === '$' + k) {
+            continue;
+         }
+         hasKeys = true;
+         text += k + "=" + vars[k] + '\n';
+      }
+      if (hasKeys) {
+         text += '\n';
+      }
+      for (var i in parsed.cmds) {
+         text += parsed.cmds[i] + '\n';
+      }
+   }
+
+   replaceBody('\
+<table width="100%" height="100%" border="0">\
+    <tr><td align="left" height="1%">\
+            <input type="button" value="Instructions" onclick="instructions()"></input>\
+        </td>\
+        <td align="right"><input type="button" value="Next =>" onclick="replacer()"></td>\
+    </tr>\
+    <tr><td colspan="2" height="1%"><hr></td></tr>\
+    <tr><td colspan="2" valign="top" width="100%" height="100%">\
+            <textarea id="text">' + text + '</textarea>\
+        </td></tr>\
+</table>\
+');
+}
+
+function parse(s) {
+   var ret = {
+      defaults: {},
+      keys: [],
+      cmds: []
+   };
+   lines = ge('text').value.split('\n');
+   var mode = 'vars';
+   for (var i in lines) {
+      var line = lines[i];
+      if (line.substring(0, 1) === '#') {
+         continue;
+      }
+      if (line === '') {
+         mode = 'cmds';
+      } else if (mode === 'vars' && /=/.test(line)) {
+         var index = line.indexOf('=');
+         ret.defaults[line.substring(0, index)] = line.substring(index + 1);
+      } else {
+         ret.cmds.push(line);
+         var matches = line.match(/\$\w+/g);
+         for (var j in matches) {
+            if (ret.keys.indexOf(matches[j]) === -1) {
+               ret.keys.push(matches[j].substring(1));
+            }
+         }
+      }
+   }
+   return (ret);
+}
+
+function getVars() {
+   var ret = {};
+   for(var i in parsed.keys) {
+      var k = parsed.keys[i];
+      var v = ge('var-' + k).value;
+      ret[k] = (v !== '') ? v : '$' + k;
+   }
+   return (ret);
+}
+
+function replace(vars, cmd) {
+   for (var k in vars) {
+      cmd = cmd.replace(new RegExp('\\\$' + k + '(\\\W)', 'g'), vars[k] + '$1');
+   }
+   return (cmd);
+}
+
+function update() {
+   var vars = getVars();
+   for (var i in parsed.cmds) {
+      var cmd = parsed.cmds[i];
+      var t = replace(vars, cmd);
+      ge('cmd-' + i).innerHTML = t;
+   }
+}
+
+function replacer() {
+   text = ge("text").value;
+   parsed = parse(text);
+   var html = '\
+<table width="100%" height="100%" border="0">\
+    <tr><td align="left" height="1%">\
+            <input type="button" value="<= Back" onclick="input()"></input>\
+        </td>\
+    </tr>\
+    <tr><td colspan="2" height="1%"><hr></td></tr>\
+    <tr><td valign="top">\
+'
+    //Variables
+    html += '<table>';
+    for(var i in parsed.keys) {
+       var k = parsed.keys[i];
+       html += '\
+        <tr><td width="1%">' + k + ':</td>\
+            <td width="100%">\
+                <input type="text" id="var-' + k + '" value="' +
+                     (typeof(parsed.defaults[k]) !== 'undefined' ? parsed.defaults[k] : '') +
+                     '" style="width:100%" onkeyup="update()">\
+                </input>\
+            </td>\
+        </tr>\
+';
+    }
+    html += '</table>';
+    html += '<hr>';
+    //Commands
+    for(var i in parsed.cmds) {
+       var id = "cmd-" + i;
+       html += '<div id="' + id + '"></div>';
+    }
+
+    //End
+    html += '\
+    </td></tr>\
+</table>\
+';
+   replaceBody(html);
+   update();
+}
+</script>
+</head>
+<!-- TODO: Remove instructions() -->
+<body onload="input();">
+<div id="body"></div>
+</body>
+</html>
