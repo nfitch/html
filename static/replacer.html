@@ -96,12 +96,14 @@ function parse(s) {
       if (line.substring(0, 1) === '#') {
          continue;
       }
-      if (line === '') {
-         mode = 'cmds';
-      } else if (mode === 'vars' && /=/.test(line)) {
+      if (mode === 'vars' && /^\w+=/.test(line)) {
          var index = line.indexOf('=');
          ret.defaults[line.substring(0, index)] = line.substring(index + 1);
       } else {
+         mode = 'cmds';
+         if (line === '') {
+             continue;
+         }
          ret.cmds.push(line);
          var matches = line.match(/\$\w+/g);
          for (var j in matches) {
