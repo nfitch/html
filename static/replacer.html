@@ -126,10 +126,13 @@ function getVars() {
 }
 
 function replace(vars, cmd) {
+   //We add back the \n so that the (\\\W) in the regex matches for replacements
+   // at the end.
+   var ncmd = cmd + '\n';
    for (var k in vars) {
-      cmd = cmd.replace(new RegExp('\\\$' + k + '(\\\W)', 'g'), vars[k] + '$1');
+      ncmd = ncmd.replace(new RegExp('\\\$' + k + '(\\\W)', 'g'), vars[k] + '$1');
    }
-   return (cmd);
+   return (ncmd);
 }
 
 function update() {
