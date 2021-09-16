@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>Title</title>
+    <script type="text/javascript">
+      function setInstructions() {
+          var href = window.location.href.includes('?') ?
+              window.location :
+              window.location + '?title=';
+          document.body.innerHTML = ' \
+      This page sets the web page title if you append ?title=[title], like so:<br> \
+      <a href="' + href + '">' + href + '</a><br><br> \
+      <small>Yes, that\'s all this does...</small> \
+      ';
+      }
+
+      function setUp() {
+          var urlSearchParams = new URLSearchParams(window.location.search);
+          var params = Object.fromEntries(urlSearchParams);
+          if (!params.title) {
+              setInstructions();
+          } else {
+              document.title = params.title;
+              document.body.innerHTML = '<big>' + params.title + "</big>";
+          }
+      }
+    </script>
+  </head>
+  <body onLoad="setUp()">
+  </body>
+</html>
