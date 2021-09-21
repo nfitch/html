@@ -1,0 +1,15 @@
+id,name,manager_id,title
+joe_1,Joe McApple,,President
+mary_2,Mary Willford,joe_1,"Vice President, Engineering"
+roberta_3,Roberta Peterson,joe_1,"Vice President, Finance"
+dave_4,Dave Studgy,joe_1,"Vice President, Marketing"
+david_5,David Markham,joe_1,"Vice President, Human Resources"
+peter_6,Peter Great,joe_1,Chief of Staff
+hanna_21,Hanna Willford,mary_2,"Director, Infrastructure"
+bob_22,Bob Studdord,mary_2,"Director, Apps"
+ben_23,Ben McPearson,mary_2,"Director, Data Science"
+gill_31,Gill Fish,roberta_3,Senior Finance Analyst
+marky_32,Marky Mark,roberta_3,Finance Analysis
+yueh_61,Yueh Weh,peter_6,Executive Assistant
+brittany_211,Brittany Lifiky,hanna_21,Architect
+gabriella_212,Gabriella Mymer,hanna_21,Senior Software Engineer
