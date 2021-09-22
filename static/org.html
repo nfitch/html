@@ -30,32 +30,32 @@
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script type="text/javascript">
       /***********************************
-      * Data CSV input:
-      *    id: unique id for the Person
-      *    name: name
-      *    manager_id: unique id for the manager Person
-      *    title: job title
-      *
-      * Join CSV input:
-      *    id: [joins on this key]
-      *    [fields]: Will slap any fields, by name, into the Person.
-      *              Note: This will *override* any properties in the original
-      *                    data.
-      *
-      * Person fields (after transform):
-      *    id: unique id for the person
-      *    managerId: unique id for the manager
-      *    name: Person's name
-      *    numDirects: Number of direct reports
-      *    numReports: Total number of people that roll up to Person
-      *    orgName: [Optional] Friendly name (what they do)
-      *    children: Person[]
-      *
-      * index contains: index[id] => Person
-      * org contains: index[""] - pseudo blank person that holds all the top
-      *                           level people in the org.  Yes, there are
-      *                           sometimes joint CEOs.
-      */
+       * Data CSV input:
+       *    id: unique id for the Person
+       *    name: name
+       *    manager_id: unique id for the manager Person
+       *    title: job title
+       *
+       * Join CSV input:
+       *    id: [joins on this key]
+       *    [fields]: Will slap any fields, by name, into the Person.
+       *              Note: This will *override* any properties in the original
+       *                    data.
+       *
+       * Person fields (after transform):
+       *    id: unique id for the person
+       *    managerId: unique id for the manager
+       *    name: Person's name
+       *    numDirects: Number of direct reports
+       *    numReports: Total number of people that roll up to Person
+       *    orgName: [Optional] Friendly name (what they do)
+       *    children: Person[]
+       *
+       * index contains: index[id] => Person
+       * org contains: index[""] - pseudo blank person that holds all the top
+       *                           level people in the org.  Yes, there are
+       *                           sometimes joint CEOs.
+       */
 
       //Ya... globals... sigh...
       var index = {};
@@ -154,8 +154,7 @@
           barHeight = 20,
           barWidth = (width - margin.left - margin.right) * 0.8;
 
-      var i = 0,  //TODO
-          duration = 400,
+      var duration = 400,
           root,
           svg;
 
@@ -181,13 +180,14 @@
 
           // Compute the "layout".
           // TODO https://github.com/d3/d3-hierarchy/issues/67
-          var index = -1;
+          var i = -1;
           root.eachBefore(function(n) {
-              n.x = ++index * barHeight;
+              n.x = ++i * barHeight;
               n.y = n.depth * 20;
           });
 
           // Update the nodes…
+          i = 0;
           var node = svg.selectAll(".node")
               .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
@@ -285,6 +285,22 @@
           updateD3(d);
       }
 
+      function collapseToLevelD3(level) {
+          maybeCollapseLevelD3(level, root);
+          updateD3(d);
+      }
+
+      function maybeCollapseLevelD3(level, node) {
+          if (level === 0) {
+              clickD3(node);
+          } else {
+              --level;
+              node.children.forEach(function(n) {
+                  maybeCollapseLevelD3(level, n);
+              });
+          }
+      }
+
       function colorD3(d) {
           return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
       }
@@ -315,6 +331,7 @@
               addOrgStats(org);
               console.log(org);
               initD3();
+              collapseToLevelD3(2);
           }
       }
     </script>
