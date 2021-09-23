@@ -313,11 +313,19 @@
 
       function toggleToLevelD3(level) {
           maybeToggleLevelD3(level, root);
+          updateD3(root);
       }
 
       function maybeToggleLevelD3(level, node) {
           if (level <= 0) {
-              clickD3(node);
+              // Toggle, copied from clickD3, above.
+              if (node.children) {
+                  node._children = node.children;
+                  node.children = null;
+              } else {
+                  node.children = node._children;
+                  node._children = null;
+              }
           }
           // Note we do this for all the tree so that it's toggled
           // as we click around in the UI.
