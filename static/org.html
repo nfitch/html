@@ -229,8 +229,12 @@
               .attr("dy", 3.5)
               .attr("dx", barWidth - 75)
               .text(function(d) {
-                  return ("D: " + d.data.numDirects +
-                          " | R: " + d.data.numReports);
+                  if (d.data.numDirects || d.data.numReports) {
+                      return ("D: " + d.data.numDirects +
+                              " | R: " + d.data.numReports);
+                  } else {
+                      return "";
+                  }
               });
 
           // Transition nodes to their new position.
