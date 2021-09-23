@@ -46,6 +46,7 @@
        *    id: unique id for the person
        *    managerId: unique id for the manager
        *    name: Person's name
+       *    title: Person's title
        *    numDirects: Number of direct reports
        *    numReports: Total number of people that roll up to Person
        *    orgName: [Optional] Friendly name (what they do)
@@ -206,10 +207,31 @@
               .style("fill", colorD3)
               .on("click", clickD3);
 
+          // Name, Title
           nodeEnter.append("text")
               .attr("dy", 3.5)
               .attr("dx", 5.5)
-              .text(function(d) { return d.data.name; });
+              .text(function(d) {
+                  return d.data.name +
+                      (d.data.title ? ', ' + d.data.title : "");
+              });
+
+          // Org Name
+          nodeEnter.append("text")
+              .attr("dy", 3.5)
+              .attr("dx", barWidth / 2)
+              .text(function(d) {
+                  return (d.data.orgName ? d.data.orgName : "");
+              });
+
+          // Numbers
+          nodeEnter.append("text")
+              .attr("dy", 3.5)
+              .attr("dx", barWidth - 75)
+              .text(function(d) {
+                  return ("D: " + d.data.numDirects +
+                          " | R: " + d.data.numReports);
+              });
 
           // Transition nodes to their new position.
           nodeEnter.transition()
@@ -287,7 +309,6 @@
 
       function collapseToLevelD3(level) {
           maybeCollapseLevelD3(level, root);
-          updateD3(d);
       }
 
       function maybeCollapseLevelD3(level, node) {
