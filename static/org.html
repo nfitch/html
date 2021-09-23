@@ -307,17 +307,21 @@
           updateD3(d);
       }
 
-      function collapseToLevelD3(level) {
-          maybeCollapseLevelD3(level, root);
+      function toggleToLevelD3(level) {
+          maybeToggleLevelD3(level, root);
       }
 
-      function maybeCollapseLevelD3(level, node) {
-          if (level === 0) {
+      function maybeToggleLevelD3(level, node) {
+          if (level <= 0) {
               clickD3(node);
-          } else {
-              --level;
-              node.children.forEach(function(n) {
-                  maybeCollapseLevelD3(level, n);
+          }
+          // Note we do this for all the tree so that it's toggled
+          // as we click around in the UI.
+          --level;
+          var children = node.children ? node.children : node._children;
+          if (children) {
+              children.forEach(function(n) {
+                  maybeToggleLevelD3(level, n);
               });
           }
       }
@@ -352,7 +356,8 @@
               addOrgStats(org);
               console.log(org);
               initD3();
-              collapseToLevelD3(2);
+              // Toggle will collapse since everything starts off as expanded
+              toggleToLevelD3(2);
           }
       }
     </script>
