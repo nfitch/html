@@ -338,12 +338,41 @@
           }
       }
 
+      function collapseToLevelD3(level) {
+          maybeCollapseToLevelD3(level, root);
+          updateD3(root);
+      }
+
+      function maybeCollapseToLevelD3(level, node) {
+          console.log('ln', level, node);
+          if (level <= 0) {
+              if (node.children) {
+                  node._children = node.children;
+                  node.children = null;
+              }
+          } else {
+              if (node._children) {
+                  node.children = node._children;
+                  node._children = null;
+              }
+          }
+          // Note we do this for all the tree so that it's in the right
+          // state as we click around in the UI.
+          --level;
+          var children = node.children ? node.children : node._children;
+          if (children) {
+              children.forEach(function(n) {
+                  maybeCollapseToLevelD3(level, n);
+              });
+          }
+      }
+
       function colorD3(d) {
           return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
       }
 
       function initD3() {
-          svg = d3.select("body").append("svg")
+          svg = d3.select("#svg-container").append("svg")
               .attr("width", width) // + margin.left + margin.right)
               .append("g")
               .attr("transform",
@@ -353,6 +382,14 @@
           root.x0 = 0;
           root.y0 = 0;
           updateD3(org);
+      }
+
+      /* ==== Events ==== */
+      function collapseButtonClick() {
+          level = parseInt(document.getElementById('collapseLevel').value);
+          if (Number.isInteger(level)) {
+              collapseToLevelD3(level);
+          }
       }
 
       /* ==== Init ==== */
@@ -375,5 +412,9 @@
     </script>
   </head>
   <body onLoad="init()">
+    <button name="Collapse Button" onClick="collapseButtonClick()">collapse to</button>
+    <input type="text" id="collapseLevel" name="collapseLevel" value="2" size="3" maxlength="3"/>
+    <hr>
+    <div id="svg-container"></div>
   </body>
 </html>
