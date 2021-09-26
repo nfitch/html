@@ -27,7 +27,9 @@
         stroke-width: 1.5px;
       }
     </style>
+    <link rel="stylesheet" href="auto-complete.css">
     <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="auto-complete.min.js"></script>
     <script type="text/javascript">
       /***********************************
        * Data CSV input:
@@ -311,40 +313,12 @@
           updateD3(d);
       }
 
-      function toggleToLevelD3(level) {
-          maybeToggleLevelD3(level, root);
-          updateD3(root);
-      }
-
-      function maybeToggleLevelD3(level, node) {
-          if (level <= 0) {
-              // Toggle, copied from clickD3, above.
-              if (node.children) {
-                  node._children = node.children;
-                  node.children = null;
-              } else {
-                  node.children = node._children;
-                  node._children = null;
-              }
-          }
-          // Note we do this for all the tree so that it's toggled
-          // as we click around in the UI.
-          --level;
-          var children = node.children ? node.children : node._children;
-          if (children) {
-              children.forEach(function(n) {
-                  maybeToggleLevelD3(level, n);
-              });
-          }
-      }
-
       function collapseToLevelD3(level) {
           maybeCollapseToLevelD3(level, root);
           updateD3(root);
       }
 
       function maybeCollapseToLevelD3(level, node) {
-          console.log('ln', level, node);
           if (level <= 0) {
               if (node.children) {
                   node._children = node.children;
@@ -367,6 +341,23 @@
           }
       }
 
+      // Have the tree completely collapse, then expand around the item with
+      // this id.
+      function expandAroundD3(node) {
+          // Internal collapse everything...
+          maybeCollapseToLevelD3(0, root);
+
+          // Uncollapse Children to the top
+          while (node) {
+              node.children = node._children;
+              node._children = null;
+              node = node.parent;
+          }
+
+          // Finally, update D3.
+          updateD3(root);
+      }
+
       function colorD3(d) {
           return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
       }
@@ -382,6 +373,46 @@
           root.x0 = 0;
           root.y0 = 0;
           updateD3(org);
+      }
+
+      /* ==== Autocomplete ==== */
+      function initAutocomplete() {
+          // Setup
+          // We want "Name, Title" -> root node
+          var namesTitlesMap = {};
+          function mapChildren(node) {
+              var k = node.data.name +
+                  (node.data.title ? ", " + node.data.title : "");
+              namesTitlesMap[k] = node;
+              var children = node.children ? node.children : node._children;
+              for (c in children) {
+                  mapChildren(children[c]);
+              }
+          }
+          mapChildren(root);
+          var namesTitles = Object.keys(namesTitlesMap);
+
+          // Now set up autocomplete
+          new autoComplete({
+              selector: 'input[name="q"]',
+              minChars: 2,
+              source: function (term, suggest) {
+                  term = term.toLowerCase();
+                  var choices = namesTitles;
+                  var matches = [];
+                  // Yes, this is horribly inefficient...
+                  for (i = 0; i < choices.length; i++) {
+                      if (~choices[i].toLowerCase().indexOf(term)) {
+                          matches.push(choices[i]);
+                      }
+                  }
+                  suggest(matches);
+              },
+              onSelect: function (event, term, item) {
+                  var node = namesTitlesMap[term];
+                  expandAroundD3(node);
+              }
+          });
       }
 
       /* ==== Events ==== */
@@ -405,13 +436,15 @@
               addOrgStats(org);
               console.log(org);
               initD3();
-              // Toggle will collapse since everything starts off as expanded
-              toggleToLevelD3(2);
+              collapseToLevelD3(2);
+              initAutocomplete();
           }
       }
     </script>
   </head>
   <body onLoad="init()">
+    <input id="org-search" autofocus="" type="text" name="q" placeholder="Search..." style="width:100%;max-width:600px;outline:0" autocomplete="off">
+    |
     <button name="Collapse Button" onClick="collapseButtonClick()">collapse to</button>
     <input type="text" id="collapseLevel" name="collapseLevel" value="2" size="3" maxlength="3"/>
     <hr>
