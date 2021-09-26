@@ -1,6 +1,23 @@
 <html>
   <head>
     <title>Title</title>
+    <style>
+      .tt {
+        left: 0;
+        line-height: 200px;
+        margin-top: -100px;
+        position: absolute;
+        text-align: center;
+        top: 50%;
+        width: 100%;
+        font-size: 100;
+        font-family: monospace, sans-serif;
+      }
+
+      body {
+        font-family: monospace, sans-serif;
+      }
+    </style>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <script type="text/javascript">
       function setInstructions() {
@@ -21,7 +38,8 @@
               setInstructions();
           } else {
               document.title = params.title;
-              document.body.innerHTML = '<big>' + params.title + "</big>";
+              document.body.innerHTML =
+                  '<div class="tt">' + params.title + '</div>';
           }
       }
     </script>
