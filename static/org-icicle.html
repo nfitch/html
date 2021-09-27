@@ -1,0 +1,231 @@
+<!--
+    Org chart, backported to D3 v4 from v6:
+    https://observablehq.com/@d3/zoomable-icicle
+-->
+<html>
+  <meta charset="UTF-8">
+  <!-- D3 CSS -->
+  <style>
+    rect {
+       stroke: #fff;
+    }
+  </style>
+  <!-- /D3 CSS -->
+  <head>
+    <title>Org Chart</title>
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script type="text/javascript">
+      /***********************************
+       * Data CSV input:
+       *    id: unique id for the Person
+       *    name: name
+       *    manager_id: unique id for the manager Person
+       *    title: job title
+       *
+       * Join CSV input:
+       *    id: [joins on this key]
+       *    [fields]: Will slap any fields, by name, into the Person.
+       *              Note: This will *override* any properties in the original
+       *                    data.
+       *
+       * Person fields (after transform):
+       *    id: unique id for the person
+       *    managerId: unique id for the manager
+       *    name: Person's name
+       *    title: Person's title
+       *    numDirects: Number of direct reports
+       *    numReports: Total number of people that roll up to Person
+       *    orgName: [Optional] Friendly name (what they do)
+       *    children: Person[]
+       *
+       * index contains: index[id] => Person
+       * org contains: index[""] - pseudo blank person that holds all the top
+       *                           level people in the org.  Yes, there are
+       *                           sometimes joint CEOs.
+       */
+
+      //Ya... globals... sigh...
+      var index = {};
+      var orgDataPath = "org-data/data.csv";
+      var orgJoinPath = "org-data/join.csv";
+
+      //Holds the org and the (for now, single, org joins)
+      var org;
+      var joins;
+
+      /* ==== Build the org from CSV rows ==== */
+      function orgFromRows(rows) {
+          for (var i = 0; i < rows.length; ++i) {
+              var row = rows[i];
+
+              //Build person
+              var person = index[row.id];
+              if (!person) {
+                  person = {};
+                  person.id = row.id;
+                  person.children = [];
+                  index[person.id] = person;
+              }
+              person.name = row.name;
+              person.managerId = row.manager_id;
+              person.title = row.title;
+              person.raw = row;
+
+              //Add to the manager
+              var manager = index[person.managerId];
+              if (!manager) {
+                  manager = {};
+                  manager.id = person.managerId;
+                  manager.children = [];
+                  index[manager.id] = manager;
+              }
+              manager.children.push(person);
+          }
+
+          org = index[""];
+
+          //Call back to init now that we have data.
+          init();
+      }
+
+      /* ==== Helpers ==== */
+      function toCamel(s) {
+          return s.replace(/([-_][a-z])/ig, ($1) => {
+              return $1.toUpperCase()
+                  .replace('_', '');
+          });
+      };
+
+      /* ==== Join data into org structure ==== */
+      function orgJoinData(rows) {
+          joins = rows;
+          for (var i = 0; i < joins.length; ++i) {
+              var join = joins[i];
+
+              var node = index[join.id];
+              if (!node) {
+                  console.error('Attempted join but couldnt find person', join);
+                  continue;
+              }
+
+              for (key in join) {
+                  var newKey = toCamel(key);
+                  node[newKey] = join[key];
+              }
+          }
+
+          //Call back to init now that we have data.
+          init();
+      }
+
+      /* ==== Add Stats to org ==== */
+      function addOrgStats(org) {
+          levelStats(org);
+      }
+
+      function levelStats(node) {
+          //DFS, roll stats from the bottom up.
+          node.children.forEach(levelStats);
+
+          //Roll up number of directs and reports
+          node.numDirects = node.children.length;
+          node.numReports = node.numDirects;
+          node.children.forEach(function (child) {
+              node.numReports += child.numReports;
+          });
+      }
+
+      function orgToIdMap(org) {
+          return levelToIdMap(org);
+      }
+
+      function levelToIdMap(node) {
+          if (node.children && node.children.length > 0) {
+              var level = {};
+              node.children.forEach(function (c) {
+                  level[c.id] = levelToIdMap(c);
+              });
+              return level;
+          } else {
+              return 1;
+          }
+      }
+
+      /* ==== D3 ==== */
+      function initD3() {
+          var width = 960,
+              height = 500;
+
+          var x = d3.scaleLinear()
+              .range([0, width]);
+
+          var y = d3.scaleLinear()
+              .range([0, height]);
+
+          var color = d3.scaleOrdinal(d3.schemeCategory20c);
+
+          var partition = d3.partition()
+              .size([width, height])
+              .padding(0)
+              .round(true);
+
+          var svg = d3.select("body").append("svg")
+              .attr("width", width)
+              .attr("height", height);
+
+          var rect = svg.selectAll("rect");
+
+          var root = d3.hierarchy(org.children[0].children[0])
+              .sum(function(d) { return d.value })
+              .sort(function(a, b) { return b.value - a.value; });
+
+          partition(root);
+
+          rect = rect
+              .data(root.descendants())
+              .enter().append("rect")
+              .attr("x", function(d) { return d.x0; })
+              .attr("y", function(d) { return d.y0; })
+              .attr("width", function(d) { return d.x1 - d.x0; })
+              .attr("height", function(d) { return d.y1 - d.y0; })
+              .attr("fill", function(d) {
+                  console.log(root);
+                  console.log(d);
+                  return color((d.children ? d : d.parent).data.key);
+              })
+              .on("click", clicked);
+
+          function clicked(d) {
+              x.domain([d.x0, d.x1]);
+              y.domain([d.y0, height]).range([d.depth ? 20 : 0, height]);
+
+              rect.transition()
+                  .duration(750)
+                  .attr("x", function(d) { return x(d.x0); })
+                  .attr("y", function(d) { return y(d.y0); })
+                  .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+                  .attr("height", function(d) { return y(d.y1) - y(d.y0); });
+          }
+      }
+
+      /* ==== Init ==== */
+      //Called multiple times as data is loaded.
+      function init() {
+          if (!org) {
+              d3.csv(orgDataPath, orgFromRows);
+          } else if (!joins) {
+              d3.csv(orgJoinPath, orgJoinData);
+          } else {
+              //Give the Top node a name so it isn't blank.
+              org.name = "The Org";
+              addOrgStats(org);
+              console.log(org);
+              initD3();
+          }
+      }
+    </script>
+  </head>
+  <body onLoad="init()">
+  </body>
+</html>
