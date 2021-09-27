@@ -51,6 +51,7 @@
        *    title: Person's title
        *    numDirects: Number of direct reports
        *    numReports: Total number of people that roll up to Person
+       *    levelPercent: The % this rollup has vs. total of all peers
        *    orgName: [Optional] Friendly name (what they do)
        *    children: Person[]
        *
@@ -137,17 +138,22 @@
       /* ==== Add Stats to org ==== */
       function addOrgStats(org) {
           levelStats(org);
+          org.levelPercent = 100;
       }
 
       function levelStats(node) {
           //DFS, roll stats from the bottom up.
           node.children.forEach(levelStats);
 
-          //Roll up number of directs and reports
+          //Roll up stats on directs and reports
           node.numDirects = node.children.length;
           node.numReports = node.numDirects;
           node.children.forEach(function (child) {
               node.numReports += child.numReports;
+          });
+          node.children.forEach(function (child) {
+              child.levelPercent =
+                  parseInt((child.numReports / node.numReports) * 100);
           });
       }
 
@@ -229,11 +235,14 @@
           // Numbers
           nodeEnter.append("text")
               .attr("dy", 3.5)
-              .attr("dx", barWidth - 75)
+              .attr("dx", barWidth - 125)
               .text(function(d) {
-                  if (d.data.numDirects || d.data.numReports) {
+                  if (d.data.numDirects || d.data.numReports ||
+                      d.data.levelPercent) {
                       return ("D: " + d.data.numDirects +
-                              " | R: " + d.data.numReports);
+                              " | R: " + d.data.numReports +
+                              " | " + d.data.levelPercent + "%"
+                             );
                   } else {
                       return "";
                   }
