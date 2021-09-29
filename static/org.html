@@ -183,6 +183,8 @@
           .x(function(d) { return d.y; })
           .y(function(d) { return d.x; });
 
+      var focusedD3 = undefined;
+
       function updateD3(source) {
           // Compute the flattened node list.
           var nodes = root.descendants();
@@ -331,7 +333,21 @@
               d.children = d._children;
               d._children = null;
           }
+          focusElementD3(d);
           updateD3(d);
+      }
+
+      function focusElementD3(d) {
+          unfocusElementD3();
+          focusedD3 = d;
+          d.focused = true;
+      }
+
+      function unfocusElementD3() {
+          if (focusedD3) {
+              focusedD3.focused = false;
+              focusedD3 = undefined;
+          }
       }
 
       function collapseToLevelD3(level) {
@@ -365,6 +381,8 @@
       // Have the tree completely collapse, then expand around the item with
       // this id.
       function expandAroundD3(node) {
+          focusElementD3(node);
+
           // Internal collapse everything...
           maybeCollapseToLevelD3(0, root);
 
@@ -380,7 +398,10 @@
       }
 
       function colorD3(d) {
-          return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";
+          return d.focused ? "#ffffff" :
+              d._children ? "#3182bd" :
+              d.children ? "#c6dbef" :
+              "#fd8d3c";
       }
 
       function initD3() {
@@ -444,6 +465,12 @@
           }
       }
 
+      function clearSearch() {
+          document.getElementById("org-search").value = '';
+          unfocusElementD3();
+          updateD3(root);
+      }
+
       /* ==== Init ==== */
       //Called multiple times as data is loaded.
       function init() {
@@ -466,6 +493,7 @@
   </head>
   <body onLoad="init()">
     <input id="org-search" autofocus="" type="text" name="q" placeholder="Search..." style="width:100%;max-width:600px;outline:0" autocomplete="off">
+    <input type="button" value="X" onClick="clearSearch()">
     |
     <button name="Collapse Button" onClick="collapseButtonClick()">collapse to</button>
     <input type="text" id="collapseLevel" name="collapseLevel" value="2" size="3" maxlength="3"/>
