@@ -327,13 +327,14 @@
       // Toggle children on click.
       function clickD3(d) {
           if (d.children) {
+              unfocusElementD3();
               d._children = d.children;
               d.children = null;
           } else {
+              focusElementD3(d);
               d.children = d._children;
               d._children = null;
           }
-          focusElementD3(d);
           updateD3(d);
       }
 
