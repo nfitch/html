@@ -86,7 +86,13 @@ C D E D \n\
 
       function parseSlides(s) {
           // Strip out comments
-          s = s.replace(/\#(.+)\n/g, '');
+          var lines = s.split('\n');
+          s = '';
+          for (var i = 0; i < lines.length; ++i) {
+              if (!lines[i].startsWith('#')) {
+                  s += lines[i] + "\n";
+              }
+          }
           // Split by ---
           var slides = s.split(/---/);
           for (var i = 0; i < slides.length; ++i) {
