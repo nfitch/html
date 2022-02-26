@@ -1,0 +1,151 @@
+<html>
+  <head>
+    <title>Fit Slides</title>
+    <meta charset="UTF-8">
+    <style>
+      textarea {
+      width: 100%;
+      height: 100%;
+      }
+    </style>
+    <script type="text/javascript">
+      var gSavedText = '';
+      var gSlides = [];
+      var gLoadedSlide = 0;
+
+      function ge(s) {
+          return document.getElementById(s);
+      }
+
+      function replaceBody(s) {
+          ge("body").innerHTML = s;
+      }
+
+      function instructions() {
+          ge("text").value = '\
+# This full-screens some text to the browser area.  It will separate text \n\
+# into "slides" if you put a spacer of "---" between text.  Heres an example: \n\
+F A D \n\
+F A E \n\
+D C A B \n\
+F F E \n\
+C D E \n\
+F F E \n\
+--- \n\
+[Am Bb]x4 \n\
+C D E D \n\
+';
+      }
+
+      function input() {
+          replaceBody('\
+<table width="100%" height=100% border="0">\
+    <tr><td align="left" height="1%">\
+            <input type="button" value="Instructions" onclick="instructions()"></input>\
+        </td>\
+        <td align="right"><input type="button" value="Next =>" onclick="slides()"></td>\
+    </tr>\
+    <tr><td colspan="2" height="1%"><hr></td></tr>\
+    <tr><td colspan="2" valign="top">\
+            <textarea id="text">' + gSavedText + '</textarea>\
+        </td></tr>\
+</table>\
+');
+      }
+
+      function loadSlide(n) {
+          gLoadedSlide = n;
+          var bodyText = ge('body-text');
+          ge('body-text').innerHTML = gSlides[gLoadedSlide];
+          fitElement(bodyText);
+      }
+
+      function fitElement(ele) {
+          ele.style.fontSize = '5px';
+          //Scale the font size to just fit the container
+          var height = ele.parentNode.clientHeight;
+          var width = ele.parentNode.clientWidth;
+          var size = 0;
+          //console.log('Scaling to (wxh):', width, height);
+          // Yes, yes.  I know this is totally inefficent.  But it works.
+          for (var i = 5; i < 512; i += 1) {
+              ele.style.fontSize = i + 'px';
+              if (ele.clientHeight > height ||
+                  ele.clientWidth > width) {
+                  // Why 3?  Sometimes horizontal still wraps at 1.
+                  // Ya, I don't like magic numbers either, but these are
+                  // my crappy web tools and I don't have time to make it
+                  // perfect.  Sorry.
+                  size = i - 3;
+                  break;
+              }
+          }
+          //console.log('Setting font size to:', size);
+          ele.style.fontSize = size + 'px';
+      }
+
+      function parseSlides(s) {
+          // Strip out comments
+          s = s.replace(/\#(.+)\n/g, '');
+          // Split by ---
+          var slides = s.split(/---/);
+          for (var i = 0; i < slides.length; ++i) {
+              // Strip whitespace
+              slides[i] = slides[i].trim();
+              // Add in breaks and wrap in no breaks.
+              // If we take out the nobrs the text will flow... but we
+              // don't want that.
+              slides[i] = slides[i].replace(/\n/g, '</nobr><br><nobr>');
+              slides[i] = '<nobr>' + slides[i] + '</nobr>';
+          }
+          return slides;
+      };
+
+      function nextSlide() {
+          var n = ++gLoadedSlide;
+          loadSlide(n >= gSlides.length ? 0 : n);
+      }
+
+      function prevSlide() {
+          var n = --gLoadedSlide;
+          loadSlide(n < 0 ? gSlides.length - 1 : n);
+      }
+
+      function slides() {
+          // Ok, save what we have
+          gSavedText = ge("text").value;
+
+          // Template for the slides
+          replaceBody('\
+<table width="100%" height="100%" border="0">\
+    <tr><td align="left" height="1%">\
+           <input type="button" value="Back" onclick="input()"></input>\
+        </td>\
+        <td align="right">\
+           <input type="button" value="<= Prev" onclick="prevSlide()"></input>\
+           <input type="button" value="Next =>" onclick="nextSlide()"></input>\
+        </td>\
+    </tr>\
+    <tr><td colspan="2" height="1%"><hr></td></tr>\
+    <tr height="100%"><td colspan="2" valign="top">\
+      <div id="body-text" class="body-text"></div>\
+      </td>\
+</table>\
+');
+          //Parse the text into slides, store in those sweet, sweet global vars
+          gSlides = parseSlides(gSavedText);
+
+          //Set the first
+          loadSlide(0);
+      }
+
+      function onLoad() {
+          input();
+          instructions();
+      }
+    </script>
+  </head>
+  <body onload="onLoad();">
+    <div id="body"></div>
+  </body>
+</html>
