@@ -24,16 +24,154 @@
       function instructions() {
           ge("text").value = '\
 # This full-screens some text to the browser area.  It will separate text \n\
-# into "slides" if you put a spacer of "---" between text.  Heres an example: \n\
-F A D \n\
-F A E \n\
-D C A B \n\
-F F E \n\
-C D E \n\
-F F E \n\
+# into "slides" if you put a spacer of "---" between text. \n\
+# \n\
+# It also splits left and right panes if, within two "---"s you separate \n\
+# with "|||". \n\
+# \n\
+# Heres an example: \n\
+D Bm F#m \n\
+Em7 A7 \n\
+D Bm F#m \n\
+Em7 Gm \n\
+ \n\
+D A7 \n\
+A \n\
+G D \n\
+A \n\
+G D \n\
+||| \n\
+Words are flying out like endless rain into a paper cup \n\
+They slither wildly as they make their way across the universe \n\
+Pools of sorrow waves of joy are drifting through my open mind \n\
+Possessing and caressing me \n\
+ \n\
+Jai Guru Deva Om \n\
+Nothing\'s gonna change my world \n\
+Nothing\'s gonna change my world \n\
+Nothing\'s gonna change my world \n\
+ \n\
+Images of broken light which dance before me like a million eyes \n\
+They call me on and on across the universe \n\
+Thoughts meander like a restless wind inside a letterbox \n\
+They tumble blindly as they make their way across the universe \n\
+ \n\
+Sounds of laughter shades of life are ringing in my open ears \n\
+Inciting and inviting me \n\
+Limitless undying love which shines around me like a million suns \n\
+It calls me on and on across the universe \n\
 --- \n\
-[Am Bb]x4 \n\
-C D E D \n\
+D G D \n\
+D G A \n\
+D G D \n\
+ \n\
+C G D \n\
+C G D \n\
+ \n\
+F C \n\
+F A7 \n\
+||| \n\
+I can see clearly now the rain is gone \n\
+I can see all obstacles in my way \n\
+Gone are the dark clouds that had me blind \n\
+ \n\
+It\'s gonna be a bright (bright) \n\
+Bright (bright) sunshiny day \n\
+ \n\
+Oh, yes I can make it now the pain is gone \n\
+All of the bad feelings have disappeared \n\
+Here is that rainbow I\'ve been praying for \n\
+ \n\
+Look all around, there\'s nothing but blue skies \n\
+Look straight ahead, there\'s nothing but blue skies \n\
+--- \n\
+G C \n\
+G C \n\
+G C \n\
+- \n\
+- G C G C \n\
+ \n\
+D \n\
+C G \n\
+D \n\
+C G \n\
+||| \n\
+Love love me do \n\
+you know I love you \n\
+I\'ll promise I\'ll be true \n\
+so please \n\
+love me do oh, love me do \n\
+ \n\
+Someone to love \n\
+Sombody new \n\
+Someone to love \n\
+Someone like you \n\
+--- \n\
+G \n\
+G \n\
+G \n\
+G \n\
+G C \n\
+G \n\
+ \n\
+||| \n\
+Dear Sir or madame will you read my book \n\
+it took me years to write will you take a look? \n\
+Its based on a novel by a man names Lear \n\
+And I need a job \n\
+So I want to be a paper back writer \n\
+Paperback Writer \n\
+ \n\
+Its a dirty story of a dirty man \n\
+And his clinging wine doest understand \n\
+His son is working for the daily mail \n\
+Its a steady job \n\
+But he wants to be a paperback writer \n\
+Paperback writer \n\
+ \n\
+Its a thousand pages give or take a few \n\
+Ill be writing more in a week or two \n\
+I can make it longer if you like the style \n\
+I can change it round \n\
+And I want to be a paperback writer \n\
+Paperback writer \n\
+ \n\
+If you really like it you can have the rights \n\
+It could make a million for you overnight \n\
+If you must return it you can send it here \n\
+But I need a break \n\
+And I want to be a paperbak writer \n\
+Paperback writer \n\
+--- \n\
+(G) D C G \n\
+Em Am C D7 \n\
+G D C G \n\
+Em Am C D7 \n\
+ \n\
+G D \n\
+D G \n\
+G D \n\
+D G \n\
+||| \n\
+In the town where I was born \n\
+Lived a man who sailed the sea \n\
+And he told us of his life \n\
+In the land of submarines \n\
+ \n\
+So we sailed up to the sun \n\
+Where we found a sea of green \n\
+And we lived beneath the waves \n\
+In our Yellow Submarine \n\
+ \n\
+We all live in a Yellow Submarine \n\
+Yellow Submarine, Yellow Submarine \n\
+We all live in a Yellow Submarine \n\
+Yellow Submarine, Yellow Submarine \n\
+ \n\
+As we live a life of ease \n\
+Everyone of us have all we need \n\
+Sky of blue and sea of green \n\
+In our Yellow Submarine \n\
 ';
       }
 
@@ -55,18 +193,19 @@ C D E D \n\
 
       function loadSlide(n) {
           gLoadedSlide = n;
-          var bodyText = ge('body-text');
-          ge('body-text').innerHTML = gSlides[gLoadedSlide];
-          fitElement(bodyText);
+          var slide = gSlides[gLoadedSlide];
+          var tdl = ge('body-text-td-left');
+          var width = tdl.clientWidth;
+          var height = tdl.clientHeight;
+          ge('body-text-left').innerHTML = slide.left;
+          ge('body-text-right').innerHTML = (slide.right ? slide.right : '');
+          fitElement(ge('body-text-left'), width, height);
+          fitElement(ge('body-text-right'), width, height);
       }
 
-      function fitElement(ele) {
+      function fitElement(ele, width, height) {
           ele.style.fontSize = '5px';
-          //Scale the font size to just fit the container
-          var height = ele.parentNode.clientHeight;
-          var width = ele.parentNode.clientWidth;
           var size = 0;
-          //console.log('Scaling to (wxh):', width, height);
           // Yes, yes.  I know this is totally inefficent.  But it works.
           for (var i = 5; i < 512; i += 1) {
               ele.style.fontSize = i + 'px';
@@ -80,8 +219,20 @@ C D E D \n\
                   break;
               }
           }
-          //console.log('Setting font size to:', size);
           ele.style.fontSize = size + 'px';
+      }
+
+      function slideToHTML(s) {
+          if (!s) {
+              return;
+          }
+          s = s.trim();
+          // Add in breaks and wrap in no breaks.
+          // If we take out the nobrs the text will flow... but we
+          // don't want that.
+          s = s.replace(/\n/g, '</nobr><br><nobr>');
+          s = '<nobr>' + s + '</nobr>';
+          return s;
       }
 
       function parseSlides(s) {
@@ -96,13 +247,10 @@ C D E D \n\
           // Split by ---
           var slides = s.split(/---/);
           for (var i = 0; i < slides.length; ++i) {
-              // Strip whitespace
-              slides[i] = slides[i].trim();
-              // Add in breaks and wrap in no breaks.
-              // If we take out the nobrs the text will flow... but we
-              // don't want that.
-              slides[i] = slides[i].replace(/\n/g, '</nobr><br><nobr>');
-              slides[i] = '<nobr>' + slides[i] + '</nobr>';
+              var sds = slides[i].split(/\|\|\|/);
+              slides[i] = {};
+              slides[i].left = slideToHTML(sds[0]);
+              slides[i].right = slideToHTML(sds[1]);
           }
           return slides;
       };
@@ -133,9 +281,14 @@ C D E D \n\
         </td>\
     </tr>\
     <tr><td colspan="2" height="1%"><hr></td></tr>\
-    <tr height="100%"><td colspan="2" valign="top">\
-      <div id="body-text" class="body-text"></div>\
+    <tr height="100%">\
+      <td valign="top" width=50% id="body-text-td-left">\
+         <div id="body-text-left" class="body-text" height=100%></div>\
       </td>\
+      <td valign="top" width=50% id="body-text-td-right">\
+         <div id="body-text-right" class="body-text" height=100%></div>\
+      </td>\
+    </tr>\
 </table>\
 ');
           //Parse the text into slides, store in those sweet, sweet global vars
