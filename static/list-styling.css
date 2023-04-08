@@ -1,0 +1,110 @@
+/**
+ * https://www.joshwcomeau.com/css/interactive-guide-to-flexbox/
+ */
+.list-outer {
+    display: flex;
+    /* TODO: Remove these to hide the border
+    border-style: solid;
+    border-width: 1px;
+    */
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    /* This ends up being the width of the list by default.
+       Once there are too many lists, it'll start squishing them equally.
+       This seems to be what we want.
+     */
+    flex-basis: 200px;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-radius: 3px;
+
+    border-width: 1px;
+    padding: 1px;
+    margin: 2px;
+}
+
+/* Starts unselected. */
+.list-end-cursor {
+    border-style: solid;
+    border-radius: 2px;
+    background-color: #FFFFFF;
+    height: 1px;
+
+    border-color: #BEBEBE;
+    border-width: 1px;
+    padding: 1px;
+    margin: 2px;
+}
+
+.list-element {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-radius: 3px;
+    /* shows newlines in elements rather than dealing with <br/>s */
+    white-space: pre;
+
+    border-width: 1px;
+    padding: 2px;
+    margin: 2px;
+}
+
+/**
+ * https://stackoverflow.com/questions/38850419/how-to-create-multi-color-border-with-css
+ */
+.list-element-1-color {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+
+    border-width: 2px; /* 1 unselected */
+    padding: 2px; /* 2 unselected */
+    margin: 1px; /* 2 unselected */
+    border-image: linear-gradient(
+        to right,
+        green 0% 100%) 1;
+}
+
+.list-element-3-color {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+
+    border-width: 2px; /* 1 unselected */
+    padding: 2px; /* 2 unselected */
+    margin: 1px; /* 2 unselected */
+    border-image: linear-gradient(
+        to right,
+        green 0% 33%,
+        blue 33% 66%,
+        purple 66% 100%) 1;
+}
+
+.list-element-4-color {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 3px;
+
+    border-width: 2px; /* 1 unselected */
+    padding: 2px; /* 2 unselected */
+    margin: 1px; /* 2 unselected */
+    border-image: linear-gradient(
+        to right,
+        grey 0% 25%,
+        yellow 25% 50%,
+        red 50% 75%,
+        teal 75% 100%) 1;
+}
