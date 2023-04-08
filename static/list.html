@@ -9,6 +9,7 @@
       var DEBUG = false;
       var saveScheduled = false;
       var SAVE_PERIOD = 3000;
+      var DEFAULT_FILENAME = "list.json";
 
       //---- Keyboard Event Handling ----
       function noMods(eve) {
@@ -389,6 +390,13 @@
       }
 
       function dataFromObject(data) {
+          //Just skip everything below if we have an empty array
+          if (data.length === 0) {
+              initMinimum();
+              return;
+          }
+
+          //Try to load the array...
           var lo = document.getElementById("list-outer");
           var firstElement = null;
           for (var i = 0; i < data.length; ++i) {
@@ -431,10 +439,37 @@
               return;
           }
           var dataString = localStorage.getItem("listData");
-          console.log("Loading: ", dataString);
+          console.log("Loading from local storage:", dataString);
           var data = JSON.parse(dataString);
           clearData();
           dataFromObject(data);
+      }
+
+      //---- Save and load from a file ----
+      function saveJSON() {
+          var data = dataToObject();
+          var dataStr = "data:text/json;charset=utf-8," +
+              encodeURIComponent(JSON.stringify(data));
+          var downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.setAttribute("href", dataStr);
+          downloadAnchorNode.setAttribute("download", DEFAULT_FILENAME);
+          document.body.appendChild(downloadAnchorNode); // required for firefox
+          downloadAnchorNode.click();
+          downloadAnchorNode.remove();
+      }
+
+      function loadJSON() {
+          var lfs = document.getElementById("load-file-select");
+          //We're only loading the first file
+          var file = lfs.files[0];
+          var fr = new FileReader();
+          fr.onload = function (eve) {
+              console.log("File contents", eve.target.result);
+              var data = JSON.parse(eve.target.result);
+              clearData();
+              dataFromObject(data);
+          }
+          fr.readAsText(file);
       }
 
       //---- Clear, reset, init minimum ----
@@ -443,7 +478,7 @@
           lo.replaceChildren();
       }
 
-      function reset() {
+      function resetList() {
           clearData();
           initMinimum();
       }
@@ -458,23 +493,33 @@
 
       //---- Application Init ----
       function init() {
+          //Disable the form
+          var cf = document.getElementById("control-form");
+          cf.onkeypress = function (e) {
+              e.preventDefault();
+          }
+
+          //Set all key presses to go to the keyHandler
           document.addEventListener('keydown', keyHandler);
 
           //Check local storage for previous data, otherwise, create some
           // empty list.
           if (dataInLocalStorage()) {
-              console.log("Loading data from local storage");
               restoreFromLocalStorage();
           } else {
               //Empty List
-              console.log("No data in local storage, creating empty list");
               initMinimum();
           }
       }
     </script>
   </head>
   <body onload="init()">
-    <input type="button" name="Reset" value="Reset" onClick="reset()">
+    <form id="control-form">
+      <input type="button" name="Reset" value="Reset" onClick="resetList()">
+      <input type="button" name="Save" value="Save" onClick="saveJSON()">
+      <input type="file" name="Load" value="Load" accept="text/json,.json"
+             id="load-file-select" onchange="loadJSON()">
+    </form>
     <hr>
     <div id="list-outer" class="list-outer"></div>
   </body>
