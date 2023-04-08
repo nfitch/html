@@ -3,10 +3,10 @@
     <title>List</title>
     <link rel="stylesheet" href="list-styling.css">
     <script type="text/javascript">
+      var DEBUG = false;
       var selection = null;
       var KELEMENT = 'type-kelement';
       var KLIST = 'type-klist';
-      var DEBUG = false;
       var saveScheduled = false;
       var SAVE_PERIOD = 3000;
       var DEFAULT_FILENAME = "list.json";
@@ -81,6 +81,23 @@
               if (selection.previousSibling) {
                   selection.previousSibling.before(selection);
               }
+          //Delete (no modifiers): delete the current list
+          } else if (noMods(eve) && eve.keyCode === 46) {
+              //Try left, then right
+              var ns = selection.previousSibling;
+              ns = ns ? ns : selection.nextSibling;
+              //Ok, there's only one list. So clear it out and return.
+              if (!ns) {
+                  selection.replaceChildren();
+                  selection.appendChild(newElementDiv());
+                  //Just keep it selected.
+                  return;
+              }
+              //Delete the thing that was previously selected
+              var toDelete = selection;
+              selection = select(ns);
+              toDelete.parentElement.removeChild(toDelete);
+              toDelete.remove();
           //Log what falls through
           } else {
               if (DEBUG) { console.log(eve) };
@@ -188,6 +205,33 @@
               } else {
                   addListLeft(selection);
               }
+          //Delete (no modifiers): delete the current element
+          } else if (noMods(eve) && eve.keyCode === 46) {
+              //Find the new thing to select... try up, down, left and right
+              var pe = selection.parentElement;
+              var ns = selection.previousSibling;
+              ns = ns ? ns : selection.nextSibling;
+              ns = (ns || !pe.previousSibling) ?
+                  ns : findClosest(selection, pe.previousSibling);
+              ns = (ns || !pe.nextSibling) ?
+                  ns : findClosest(selection, pe.nextSibling);
+              //If we didn't find anything it's the last element so just clear
+              // the contents and return
+              if (!ns) {
+                  selection.innerText = "";
+                  return;
+              }
+              //Delete the thing that was previously selected
+              var toDelete = selection;
+              selection = select(ns);
+              //Since select will collapse, it's possible that we're done with
+              // the parent already.
+              var dp = toDelete.parentElement;
+              if (dp) {
+                  dp.removeChild(toDelete);
+                  tryCollapse(dp);
+              }
+              toDelete.remove();
           //Log what falls through
           } else {
               if (DEBUG) { console.log(eve) };
