@@ -7,6 +7,8 @@
       var KELEMENT = 'type-kelement';
       var KLIST = 'type-klist';
       var DEBUG = false;
+      var saveScheduled = false;
+      var SAVE_PERIOD = 3000;
 
       //---- Keyboard Event Handling ----
       function noMods(eve) {
@@ -30,37 +32,50 @@
           return ret;
       }
 
+      //Only save stuff periodically
+      function trySave() {
+          if (!saveScheduled) {
+              setTimeout(function () {
+                  saveToLocalStorage();
+                  saveScheduled = false;
+              }, SAVE_PERIOD)
+              saveScheduled = true;
+          }
+      }
+
       function keyHandler(eve) {
           if (selection && selection.ktype === KELEMENT) {
               keyHandlerElement(eve);
           } else if (selection && selection.ktype === KLIST) {
               keyHandlerList(eve);
           }
+          trySave();
       }
 
+      // When a list is selected...
       function keyHandlerList(eve) {
-          //Up (no modifiers)
+          //Up (no modifiers): select last element
           if (noMods(eve) && eve.keyCode === 38) {
               selection = select(selection.lastChild);
-          //Down (no modifiers)
+          //Down (no modifiers): select first element
           } else if (noMods(eve) && eve.keyCode === 40) {
               selection = select(selection.firstChild);
-          //Right (no modifiers)
+          //Right (no modifiers): select list to right
           } else if (noMods(eve) && eve.keyCode === 39) {
               if (selection.nextSibling) {
                   selection = select(selection.nextSibling);
               }
-          //Left (no modifiers)
+          //Left (no modifiers): select list to left
           } else if (noMods(eve) && eve.keyCode === 37) {
               if (selection.previousSibling) {
                   selection = select(selection.previousSibling);
               }
-          //Right (ctrl+shift)
+          //Right (ctrl+shift): move list to right
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
               if (selection.nextSibling) {
                   selection.nextSibling.after(selection);
               }
-          //Left (ctrl+shift)
+          //Left (ctrl+shift): move list to left
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
               if (selection.previousSibling) {
                   selection.previousSibling.before(selection);
@@ -71,6 +86,7 @@
           }
       }
 
+      // When an element is selected...
       function keyHandlerElement(eve) {
           //Regular Typing, append to selected cell
           if ((noMods(eve) || exactMods(eve, ['shift'])) && (
@@ -83,16 +99,17 @@
               (eve.keyCode > 185 && eve.keyCode < 193) ||  // ;=,-./`
               (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
               appendSelection(eve.key);
-          //Backspace (no modifiers)
+          //Backspace (no modifiers): remove last character
           } else if (noMods(eve) && eve.keyCode === 8) {
               backspace();
-          //\n (no modifiers)
+          //\n (no modifiers): Force create a new element after current element
           } else if (noMods(eve) && eve.keyCode === 13) {
               addElementAndSelectAfter(selection);
-          //\n (+shift)
+          //\n (+shift): append a newline in current element
           } else if (exactMods(eve, ['shift']) && eve.keyCode === 13) {
               appendSelection('\n');
-          //Up (no modifiers)
+          //Up (no modifiers): Select element above, make an empty element
+          // above, or select the list if falling off the top of the list
           } else if (noMods(eve) && eve.keyCode === 38) {
               if (selection.previousElementSibling) {
                   selection = select(selection.previousElementSibling);
@@ -104,7 +121,8 @@
                       addElementAndSelectBefore(selection);
                   }
               }
-          //Down (no modifiers)
+          //Down (no modifiers): Select element below, make an empty element
+          // below, or select the list if falling off the bottom of the list
           } else if (noMods(eve) && eve.keyCode === 40) {
               if (selection.nextElementSibling) {
                   selection = select(selection.nextElementSibling);
@@ -115,17 +133,18 @@
                       addElementAndSelectAfter(selection);
                   }
               }
-          //Up (ctrl+shift)
+          //Up (ctrl+shift): Move selection up
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 38) {
               if (selection.previousElementSibling) {
                   selection.previousElementSibling.before(selection);
               }
-          //Down (ctrl+shift)
+          //Down (ctrl+shift): Move selection down
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 40) {
               if (selection.nextElementSibling) {
                   selection.nextElementSibling.after(selection);
               }
-          //Right (no modifiers)
+          //Right (no modifiers): Select an element in the list to the right or
+          // create a new list with an empty element to the right
           } else if (noMods(eve) && eve.keyCode === 39) {
               if (selection.parentElement.nextSibling) {
                   var ele = findClosest(
@@ -134,7 +153,8 @@
               } else {
                   addEmptyListRight(selection);
               }
-          //Left (no modifiers)
+          //Left (no modifiers): Select an element in the list to the left or
+          // create a new list with an empty element to the right
           } else if (noMods(eve) && eve.keyCode === 37) {
               if (selection.parentElement.previousSibling) {
                   var ele = findClosest(
@@ -143,7 +163,8 @@
               } else {
                   addEmptyListLeft(selection);
               }
-          //Right (ctrl+shift)
+          //Right (ctrl+shift): Move an element in the list to the right,
+          // creating a new list if necessary
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
               if (selection.parentElement.nextSibling) {
                   var parentElement = selection.parentElement;
@@ -154,7 +175,8 @@
               } else {
                   addListRight(selection);
               }
-          //Left (ctrl+shift)
+          //Left (ctrl+shift): Move an element in the list to the left,
+          // creating a new list if necessary
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
               if (selection.parentElement.previousSibling) {
                   var parentElement = selection.parentElement;
@@ -343,21 +365,117 @@
 
       function appendSelection(s) {
           //Append to the selection
-          selection.innerHTML += s;
+          selection.innerText += s;
       }
 
-      //---- Init ----
-      function init() {
-          document.addEventListener('keydown', keyHandler);
+      //---- To and from object
+      function dataToObject() {
+          var data = [];
+          var ls = document.getElementById("list-outer");
+          for (var i = 0; i < ls.children.length; ++i) {
+              var dlist = { "elements": [] };
+              var elements = ls.children[i];
+              for (var j = 0; j < elements.children.length; ++j) {
+                  var t = elements.children[j].innerText;
+                  if (t !== "") {
+                      dlist.elements.push(t);
+                  }
+              }
+              if (dlist.elements.length > 0) {
+                  data.push(dlist);
+              }
+          }
+          return data;
+      }
+
+      function dataFromObject(data) {
+          var lo = document.getElementById("list-outer");
+          var firstElement = null;
+          for (var i = 0; i < data.length; ++i) {
+              //Make a new list div
+              var listDiv = newListDiv();
+              lo.appendChild(listDiv);
+              var d = data[i];
+              for (var j = 0; j < d.elements.length; ++j) {
+                  var e = d.elements[j];
+                  //Make a new element div
+                  var elementDiv = newElementDiv();
+                  elementDiv.innerText = e;
+                  listDiv.appendChild(elementDiv)
+                  if (firstElement === null) {
+                      firstElement = elementDiv;
+                  }
+              }
+          }
+          //Ok, nothing was really there.
+          if (!firstElement) {
+              firstElement = newElementDiv();
+              lo.firstChild.appendChild(firstElement);
+          }
+          selection = select(firstElement);
+      }
+
+      //---- Save and load from Local Storage ----
+      function dataInLocalStorage() {
+          return (localStorage.getItem("listData") !== null);
+      }
+
+      function saveToLocalStorage() {
+          var data = dataToObject();
+          localStorage.setItem("listData", JSON.stringify(data));
+      }
+
+      function restoreFromLocalStorage() {
+          if (!dataInLocalStorage()) {
+              console.log("No data in local storage.  Nothing to do...");
+              return;
+          }
+          var dataString = localStorage.getItem("listData");
+          console.log("Loading: ", dataString);
+          var data = JSON.parse(dataString);
+          clearData();
+          dataFromObject(data);
+      }
+
+      //---- Clear, reset, init minimum ----
+      function clearData() {
+          var lo = document.getElementById("list-outer");
+          lo.replaceChildren();
+      }
+
+      function reset() {
+          clearData();
+          initMinimum();
+      }
+
+      function initMinimum() {
           var elementDiv = newElementDiv();
           selection = select(elementDiv);
           var listDiv = newListDiv();
           listDiv.appendChild(elementDiv)
           document.getElementById("list-outer").appendChild(listDiv);
       }
+
+      //---- Application Init ----
+      function init() {
+          document.addEventListener('keydown', keyHandler);
+
+          //Check local storage for previous data, otherwise, create some
+          // empty list.
+          if (dataInLocalStorage()) {
+              console.log("Loading data from local storage");
+              restoreFromLocalStorage();
+          } else {
+              //Empty List
+              console.log("No data in local storage, creating empty list");
+              initMinimum();
+          }
+      }
     </script>
   </head>
   <body onload="init()">
+    <input type="button" name="Reset" value="Reset" onClick="reset()">
+    <hr>
     <div id="list-outer" class="list-outer"></div>
   </body>
 </html>
