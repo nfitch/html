@@ -561,8 +561,10 @@
     <form id="control-form">
       <input type="button" name="Reset" value="Reset" onClick="resetList()">
       <input type="button" name="Save" value="Save" onClick="saveJSON()">
-      <input type="file" name="Load" value="Load" accept="text/json,.json"
-             id="load-file-select" onchange="loadJSON()">
+      <input type="button" name="Load" value="Load"
+             onClick="document.getElementById('load-file-select').click()">
+      <input type="file" id="load-file-select" accept="text/json,.json"
+             onchange="loadJSON()" style="display:none;">
     </form>
     <hr>
     <div id="list-outer" class="list-outer"></div>
