@@ -53,6 +53,15 @@
           trySave();
       }
 
+      function deselectAllText() {
+          if (window.getSelection) {
+              window.getSelection().removeAllRanges();
+          }
+          else if (document.selection) {
+              document.selection.empty();
+          }
+      }
+
       // When a list is selected...
       function keyHandlerList(eve) {
           //Up (no modifiers): select last element
@@ -73,11 +82,13 @@
               }
           //Right (ctrl+shift): move list to right
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
+              deselectAllText();
               if (selection.nextSibling) {
                   selection.nextSibling.after(selection);
               }
           //Left (ctrl+shift): move list to left
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
+              deselectAllText();
               if (selection.previousSibling) {
                   selection.previousSibling.before(selection);
               }
@@ -153,11 +164,13 @@
               }
           //Up (ctrl+shift): Move selection up
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 38) {
+              deselectAllText();
               if (selection.previousElementSibling) {
                   selection.previousElementSibling.before(selection);
               }
           //Down (ctrl+shift): Move selection down
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 40) {
+              deselectAllText();
               if (selection.nextElementSibling) {
                   selection.nextElementSibling.after(selection);
               }
@@ -184,6 +197,7 @@
           //Right (ctrl+shift): Move an element in the list to the right,
           // creating a new list if necessary
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
+              deselectAllText();
               if (selection.parentElement.nextSibling) {
                   var parentElement = selection.parentElement;
                   var ele = findClosest(
@@ -196,6 +210,7 @@
           //Left (ctrl+shift): Move an element in the list to the left,
           // creating a new list if necessary
           } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
+              deselectAllText();
               if (selection.parentElement.previousSibling) {
                   var parentElement = selection.parentElement;
                   var ele = findClosest(
