@@ -53,6 +53,30 @@
     margin: 2px;
 }
 
+input[type="button"] {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    padding: 2px 8px;
+    border-style: solid;
+    border-radius: 3px;
+    border-color: #BEBEBE;
+    border-width: 1px;
+    appearance: auto;
+    background-color: #FAFBFC;
+    cursor: pointer;
+}
+
+input[type="button"]:hover {
+    background-color: #F3F4F6;
+    transition-duration: 0.1s;
+}
+
+form {
+    padding: 0px;
+    margin: 0px;
+    margin-bottom: 10px;
+}
+
 /**
  * https://stackoverflow.com/questions/38850419/how-to-create-multi-color-border-with-css
  */
