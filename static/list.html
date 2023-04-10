@@ -1,3 +1,43 @@
+<!--
+    Rapidly create and manage lists of things.  The primary goal:
+    - UX should get out of the way of a user's stream of conscience.
+
+    The implications:
+    - All actions should be intuitive / brain mappable.
+    - Interactions are all keboard based.
+    - "Instantly" responsive.
+    - No extra / extraneous keystrokes.
+
+    This isn't meant to be a spreadsheet... if I could have used a spreadsheet
+    in place of this I would have.
+
+    As of 4/9/2023 this is day-to-day useable.
+
+    I may or may not ever do this stuff, but, you know, everything needs its
+    unfulfilled TODO list!
+    - Style buttons better
+    - Use a map for KeyHandlers rather than long if/else chain
+    - Help for new users (and me!)
+    - CSV save/load (probably introduce an external dependency :sad-panda:)
+    - Named Views (<2 clicks New/Save As/Load/Delete)
+    - "Easy" Saving / Loading somewhere other than Local Storage
+    - Cut/Copy/Paste
+    - Type mode on/off switch
+    - Slam cursor & selection to extremities w/single key combinations
+    - Abstract the DOM interactions (super intertwined makes some things harder)
+    - List headers (type when list is highlighted)
+    - Multi Select & all the implications
+    - Mouse Actions (drag/drop & select (ctrl to multi))
+    - Action Stack + undo/redo
+    - Checklist mode
+    - Lists can have widths (some wider than others)
+       - Will persist in Local Storage and JSON representations
+    - Per-user keyboard binding remaps (emacs, vim bindings?)
+    - Edit element as HTML (not sure if I really want to go there)
+
+    Of course, the holy grail is an Excalidraw-like multi-user experience, but
+    that would take real engineering... maybe someday...
+  -->
 <html>
   <head>
     <title>List</title>
@@ -44,15 +84,6 @@
           }
       }
 
-      function keyHandler(eve) {
-          if (selection && selection.ktype === KELEMENT) {
-              keyHandlerElement(eve);
-          } else if (selection && selection.ktype === KLIST) {
-              keyHandlerList(eve);
-          }
-          trySave();
-      }
-
       function deselectAllText() {
           if (window.getSelection) {
               window.getSelection().removeAllRanges();
@@ -60,6 +91,16 @@
           else if (document.selection) {
               document.selection.empty();
           }
+      }
+
+      //Top level key handler - all keyboard input flows through here.
+      function keyHandler(eve) {
+          if (selection && selection.ktype === KELEMENT) {
+              keyHandlerElement(eve);
+          } else if (selection && selection.ktype === KLIST) {
+              keyHandlerList(eve);
+          }
+          trySave();
       }
 
       // When a list is selected...
