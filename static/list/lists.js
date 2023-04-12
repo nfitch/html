@@ -1,11 +1,13 @@
-//import { createListParser } from "./list-parser.js"
+import { createListParser } from "./list-parser.js"
 
 function createLists(root, storage) {
     var selection;
     var saveScheduled = false;
+    var parser = createListParser(root);
 
     //Constants
-    const DEBUG = false;
+    const DEBUG_KEYS = false;
+    const DEBUG_STORAGE = false;
     const KELEMENT = 'type-kelement';
     const KLIST = 'type-klist';
     const SAVE_PERIOD = 3000;
@@ -213,7 +215,7 @@ function createLists(root, storage) {
             toDelete.remove();
         //Log what falls through
         } else {
-            if (DEBUG) { console.log(eve) };
+            if (DEBUG_KEYS) { console.log(eve) };
         }
     }
 
@@ -322,7 +324,7 @@ function createLists(root, storage) {
             } else {
                 addListLeft(selection);
             }
-            //Delete (no modifiers): delete the current element
+        //Delete (no modifiers): delete the current element
         } else if (noMods(eve) && eve.keyCode === 46) {
             //Find the new thing to select... try up, down, left and right
             var pe = selection.parentElement;
@@ -351,7 +353,7 @@ function createLists(root, storage) {
             toDelete.remove();
             //Log what falls through
         } else {
-            if (DEBUG) { console.log(eve) };
+            if (DEBUG_KEYS) { console.log(eve) };
         }
     }
 
@@ -469,62 +471,61 @@ function createLists(root, storage) {
     }
 
     function saveToStorage() {
-        var data = dataToObject();
-        storage.setItem(DATA_STORAGE_KEY, JSON.stringify(data));
+        storage.setItem(DATA_STORAGE_KEY, stringify());
     }
 
     function restoreFromStorage() {
         if (!dataInStorage()) {
-            console.log("No data in storage.  Nothing to do...");
+            if (DEBUG_STORAGE) {
+                console.log("No data in storage.  Nothing to do...");
+            }
             return;
         }
         var dataString = storage.getItem(DATA_STORAGE_KEY);
-        console.log("Loading from local storage:", dataString);
-        var data = JSON.parse(dataString);
-        dataFromObject(data);
-    }
-
-    //---- To and from object
-    function dataToObject() {
-        var data = [];
-        for (var i = 0; i < root.children.length; ++i) {
-            var dlist = { "elements": [] };
-            var elements = root.children[i];
-            for (var j = 0; j < elements.children.length; ++j) {
-                var t = elements.children[j].innerText;
-                if (t !== "") {
-                    dlist.elements.push(t);
-                }
-            }
-            if (dlist.elements.length > 0) {
-                data.push(dlist);
-            }
+        if (DEBUG_STORAGE) {
+            console.log("Loading from local storage:", dataString);
         }
-        return data;
+        if(!fromString(dataString)) {
+            console.error("Failed to parse what was in local storage.",
+                          "Check console error log.");
+            //TODO: Disable autosaving?
+        }
     }
 
-    function dataFromObject(data) {
-        //Just skip everything below if we have an empty array
-        if (data.length === 0) {
+    //---- To and from strings
+    function stringify() {
+        return parser.stringify();
+    }
+
+    function fromString(dataString) {
+        if (DEBUG_STORAGE) { console.log("dataString", dataString); }
+        var data = parser.parse(dataString);
+        if (DEBUG_STORAGE) { console.log("Parsed data", data); }
+        if (!data) {
+            return false;
+        }
+
+        //Just skip everything below if we have an empty object or array
+        if (data.lists.length === 0) {
             resetList();
-            return;
+            return true;
         }
 
-        //Clear, then load.
+	//Clear, then load.
         clearData();
 
-        //Try to load the array...
+	//Try to load the data...
+        //TODO: Insert all the other fields into the dom overlay
         var firstElement = null;
-        for (var i = 0; i < data.length; ++i) {
+        for (var i = 0; i < data.lists.length; ++i) {
             //Make a new list div
             var listDiv = newListDiv();
             root.appendChild(listDiv);
-            var d = data[i];
-            for (var j = 0; j < d.elements.length; ++j) {
-                var e = d.elements[j];
+            var list = data.lists[i];
+            for (var j = 0; j < list.elements.length; ++j) {
                 //Make a new element div
                 var elementDiv = newElementDiv();
-                elementDiv.innerText = e;
+                elementDiv.innerText = list.elements[j].data;
                 listDiv.appendChild(elementDiv)
                 if (firstElement === null) {
                     firstElement = elementDiv;
@@ -537,6 +538,8 @@ function createLists(root, storage) {
             root.firstChild.appendChild(firstElement);
         }
         selection = select(firstElement);
+        trySave();
+        return true;
     }
 
     //Public Methods.
@@ -544,8 +547,8 @@ function createLists(root, storage) {
         init,
         keyHandler,
         resetList,
-        dataToObject,
-        dataFromObject
+        stringify,
+        fromString
     };
 }
 

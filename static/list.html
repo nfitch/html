@@ -15,7 +15,6 @@
 
     I may or may not ever do this stuff, but, you know, everything needs its
     unfulfilled TODO list!
-    - Version parsable json: v0 should be {version:0,data:[[],...]}
     - Use a map for KeyHandlers rather than long if/else chain
     - Help for new users (and me!)
     - CSV save/load (probably introduce an external dependency :sad-panda:)
@@ -69,9 +68,8 @@
       }
 
       function saveJSON() {
-          var data = lists.dataToObject();
           var dataStr = "data:text/json;charset=utf-8," +
-              encodeURIComponent(JSON.stringify(data));
+              encodeURIComponent(lists.stringify());
           var downloadAnchorNode = document.createElement('a');
           downloadAnchorNode.setAttribute("href", dataStr);
           downloadAnchorNode.setAttribute("download", DEFAULT_FILENAME);
@@ -86,16 +84,12 @@
           var file = lfs.files[0];
           var fr = new FileReader();
           fr.onload = function (eve) {
-              console.log("File contents", eve.target.result);
-              var data = JSON.parse(eve.target.result);
-              lists.dataFromObject(data);
+              if (!lists.fromString(eve.target.result)) {
+                  alert("Failed to load file.  Check console for errors.");
+                  lists.resetList();
+              }
           }
           fr.readAsText(file);
-      }
-
-      function testParse() {
-          var parser = createListParser();
-          console.log(parser.parse("..."));
       }
     </script>
   </head>
@@ -105,7 +99,8 @@
       <input type="button" name="Save" value="Save" onClick="saveJSON()">
       <input type="button" name="Load" value="Load"
              onClick="document.getElementById('load-file-select').click()">
-      <input type="button" name="Parse" value="Parse" onClick="testParse()">
+      <input type="file" id="load-file-select" accept="text/json,.json"
+             onchange="loadJSON()" style="display:none;">
     </form>
     <hr>
     <div id="list-outer" class="list-outer"></div>
