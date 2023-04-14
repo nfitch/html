@@ -15,7 +15,6 @@
 
     I may or may not ever do this stuff, but, you know, everything needs its
     unfulfilled TODO list!
-    - Use a map for KeyHandlers rather than long if/else chain
     - Help for new users (and me!)
     - Cut/Copy/Paste
     - CSV save/load (probably introduce an external dependency :sad-panda:)
@@ -61,8 +60,6 @@
           );
           keyHandler = createKeyHandler(lists);
 
-          //TODO: whittle down what's in lists.keyHandler
-          document.addEventListener('keydown', lists.keyHandler);
           document.addEventListener('keydown', keyHandler.handle);
           lists.init();
       }

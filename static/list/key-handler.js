@@ -12,7 +12,7 @@
   groups...
  */
 function createKeyHandler(lists) {
-    var DEBUG = true;
+    var DEBUG = false;
     var fnbindings = {};
 
     var actions = {
@@ -122,12 +122,42 @@ function createKeyHandler(lists) {
         return s;
     }
 
+    function noMods(eve) {
+        return !(eve.altKey || eve.ctrlKey || eve.metaKey || eve.shiftKey);
+    }
+
+    function exactMods(eve, mods) {
+        var posMods = ['alt', 'ctrl', 'meta', 'shift'];
+        var ret = 1;
+        for (var i = 0; i < posMods.length; ++i) {
+            var mod = posMods[i];
+            if (mods.includes(mod)) {
+                //Has to be set
+                ret &= eve[mod + 'Key'];
+            } else {
+                //Has to not be set
+                ret &= !(eve[mod + 'Key']);
+            }
+        }
+        return ret;
+    }
+
     function handle(eve) {
         var k = modsString(eve) + eve.key;
         if (DEBUG) { console.log("key handler <<" + k + ">>", fnbindings[k]); }
         if (fnbindings[k]) {
             fnbindings[k]();
             lists.trySave();
+        } else if ((noMods(eve) || exactMods(eve, ['shift'])) && (
+            (eve.keyCode > 47 && eve.keyCode < 58) ||     // numbers
+            eve.keyCode == 32 ||                          // spacebar
+            eve.keyCode == 61 ||                          // =
+            eve.keyCode == 173 ||                         // -
+            (eve.keyCode > 64 && eve.keyCode < 91) ||     // letters
+            (eve.keyCode > 95 && eve.keyCode < 112) ||    // numpad
+            (eve.keyCode > 185 && eve.keyCode < 193) ||   // ;=,-./`
+            (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
+            lists.appendSelection(eve.key);
         }
     }
 

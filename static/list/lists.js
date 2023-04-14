@@ -6,7 +6,6 @@ function createLists(root, storage) {
     var parser = createListParser(root);
 
     //Constants
-    const DEBUG_KEYS = false; //TODO: Remove
     const DEBUG_STORAGE = false;
     const ELEMENT_TYPE = 'lists-element';
     const LIST_TYPE = 'lists-list';
@@ -107,8 +106,8 @@ function createLists(root, storage) {
         selection = select(div);
     }
 
+    //Append text to the selection
     function appendSelection(s) {
-        //Append to the selection
         selection.innerText += s;
     }
 
@@ -144,11 +143,11 @@ function createLists(root, storage) {
             } else {
                 //Remove until there's only a blank element
                 if (selection.previousElementSibling !== null) {
-                    toSelect = selection.previousElementSibling;
+                    var toSelect = selection.previousElementSibling;
                     selection.remove();
                     selection = select(toSelect);
                 } else if (selection.nextElementSibling !== null) {
-                    toSelect = selection.nextElementSibling;
+                    var toSelect = selection.nextElementSibling;
                     selection.remove();
                     selection = select(toSelect);
                 }
@@ -221,7 +220,7 @@ function createLists(root, storage) {
 
     //Element SelectUp: Select element above, make an empty element
     // above, or select the list if falling off the top of the list
-    //List SelectUp (no modifiers): select last element
+    //List SelectUp: select last element
     function selectUp() {
         if (selection && selection.liststype === ELEMENT_TYPE) {
             if (selection.previousElementSibling) {
@@ -364,56 +363,7 @@ function createLists(root, storage) {
         }
     }
 
-    // ************** REMOVE BELOW HERE ****************
-    //---- Keyboard Event Handling ----
-    function noMods(eve) {
-        return !(eve.altKey || eve.ctrlKey || eve.metaKey || eve.shiftKey);
-    }
-
-    // There's probably a more efficient way to do ..
-    function exactMods(eve, mods) {
-        var posMods = ['alt', 'ctrl', 'meta', 'shift'];
-        var ret = 1;
-        for (var i = 0; i < posMods.length; ++i) {
-            var mod = posMods[i];
-            if (mods.includes(mod)) {
-                //Has to be set
-                ret &= eve[mod + 'Key'];
-            } else {
-                //Has to not be set
-                ret &= !(eve[mod + 'Key']);
-            }
-        }
-        return ret;
-    }
-
-    //Top level key handler - all keyboard input flows through here.
-    //TODO: Factor ths out into a Key Handler
-    function keyHandler(eve) {
-        if (selection && selection.liststype === ELEMENT_TYPE) {
-            keyHandlerElement(eve);
-        }
-        trySave();
-    }
-
-    function keyHandlerElement(eve) {
-        //Regular Typing, append to selected cell
-        if ((noMods(eve) || exactMods(eve, ['shift'])) && (
-            (eve.keyCode > 47 && eve.keyCode < 58) ||    // numbers
-            eve.keyCode == 32 ||                         // spacebar
-            eve.keyCode == 61 ||                         // =
-            eve.keyCode == 173 ||                        // -
-            (eve.keyCode > 64 && eve.keyCode < 91) ||    // letters
-            (eve.keyCode > 95 && eve.keyCode < 112) ||   // numpad
-            (eve.keyCode > 185 && eve.keyCode < 193) ||  // ;=,-./`
-            (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
-            appendSelection(eve.key);
-        } else {
-            if (DEBUG_KEYS) { console.log(eve) };
-        }
-    }
-    // ************** REMOVE ABOVE HERE ****************
-
+    //---- Finding and moving ----
     function findClosest(ele, list) {
         var rect = ele.getBoundingClientRect();
         var y = rect.y;
@@ -582,16 +532,16 @@ function createLists(root, storage) {
     //Public Methods.
     return {
         init,
-        keyHandler,
         resetList,
         stringify,
         fromString,
         trySave,
 
-        // Actions
+        // Actions on Selection
         chop,
         appendNewline,
         deleteSelection,
+        appendSelection,
         forceAddEmptyElement,
         selectUp,
         selectDown,
