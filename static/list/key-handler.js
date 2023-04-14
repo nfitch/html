@@ -12,18 +12,49 @@
   groups...
  */
 function createKeyHandler(lists) {
-    var DEBUG = false;
+    var DEBUG = true;
     var fnbindings = {};
 
     var actions = {
+        "Chop": {
+            "group": "Text Editing",
+            "help": "Remove the last character from selected element.",
+            "function": lists.chop
+        },
+        "AppendNewline": {
+            "group": "Text Editing",
+            "help": "Append a newline to the selected element.",
+            "function": lists.appendNewline
+        },
+        "AddEmptyElementAfterSelection": {
+            "group": "",
+            "help": "Force add an empty element after selection.",
+            "function": lists.addEmptyElementAfterSelection
+        },
         "SelectUp": {
             "group": "Selection Movement",
             "help": "Select element 'above' current element or the list.",
             "function": lists.selectUp
+        },
+        "SelectDown": {
+            "group": "Selection Movement",
+            "help": "Select element 'below' current element or the list.",
+            "function": lists.selectDown
         }
     }
 
-    //key is ...
+    function setDefaultBindings() {
+        bindKeyToAction("Backspace", "Chop");
+        bindKeyToAction("ShiftEnter", "AppendNewline");
+        bindKeyToAction("Enter", "AddEmptyElementAfterSelection");
+        bindKeyToAction("ArrowUp", "SelectUp");
+        bindKeyToAction("ArrowDown", "SelectDown");
+    }
+
+    //key is a string built in the following way:
+    //  Prepend Modifiers (in this order): Alt, Ctrl, Meta, Shift
+    //  Append the HTML KeyboardEvent.code
+    //    (see: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent)
     //action is the actions map key.
     function bindKeyToAction(key, action) {
         if (!actions[action]) {
@@ -37,10 +68,6 @@ function createKeyHandler(lists) {
             return false;
         }
         fnbindings[key] = actions[action].function;
-    }
-
-    function setDefaultBindings() {
-        bindKeyToAction("ArrowUp", "SelectUp");
     }
 
     function modsString(eve) {
@@ -57,6 +84,7 @@ function createKeyHandler(lists) {
         if (DEBUG) { console.log("key handler <<" + k + ">>", fnbindings[k]); }
         if (fnbindings[k]) {
             fnbindings[k]();
+            lists.trySave();
         }
     }
 

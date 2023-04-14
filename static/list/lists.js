@@ -6,7 +6,7 @@ function createLists(root, storage) {
     var parser = createListParser(root);
 
     //Constants
-    const DEBUG_KEYS = false;
+    const DEBUG_KEYS = false; //TODO: Remove
     const DEBUG_STORAGE = false;
     const ELEMENT_TYPE = 'lists-element';
     const LIST_TYPE = 'lists-list';
@@ -112,30 +112,6 @@ function createLists(root, storage) {
         selection.innerText += s;
     }
 
-    // ************** REMOVE BELOW HERE ****************
-    //---- Keyboard Event Handling ----
-    function noMods(eve) {
-        return !(eve.altKey || eve.ctrlKey || eve.metaKey || eve.shiftKey);
-    }
-
-    // There's probably a more efficient way to do ..
-    function exactMods(eve, mods) {
-        var posMods = ['alt', 'ctrl', 'meta', 'shift'];
-        var ret = 1;
-        for (var i = 0; i < posMods.length; ++i) {
-            var mod = posMods[i];
-            if (mods.includes(mod)) {
-                //Has to be set
-                ret &= eve[mod + 'Key'];
-            } else {
-                //Has to not be set
-                ret &= !(eve[mod + 'Key']);
-            }
-        }
-        return ret;
-    }
-    // ************** REMOVE ABOVE HERE ****************
-
     //Only save stuff periodically
     function trySave() {
         if (!saveScheduled) {
@@ -157,20 +133,43 @@ function createLists(root, storage) {
         }
     }
 
-    //Actions on the lists
-    function getSelectionType() {
-        return selection.liststype;
+    //---- Actions for selection ----
+
+    //Chop: remove last character from selected element
+    function chop() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            //Is a div, has text, take off the last character
+            if (selection.innerText !== "") {
+                selection.innerText = selection.innerText.slice(0, -1);
+            } else {
+                //Remove until there's only a blank element
+                if (selection.previousElementSibling !== null) {
+                    toSelect = selection.previousElementSibling;
+                    selection.remove();
+                    selection = select(toSelect);
+                } else if (selection.nextElementSibling !== null) {
+                    toSelect = selection.nextElementSibling;
+                    selection.remove();
+                    selection = select(toSelect);
+                }
+            }
+        }
     }
 
-    //Top level key handler - all keyboard input flows through here.
-    //TODO: Factor ths out into a Key Handler
-    function keyHandler(eve) {
+    //AppendNewline: append a newline in current element
+    function appendNewline() {
         if (selection && selection.liststype === ELEMENT_TYPE) {
-            keyHandlerElement(eve);
-        } else if (selection && selection.liststype === LIST_TYPE) {
-            keyHandlerList(eve);
+            appendSelection('\n');
         }
-        trySave();
+    }
+
+    //AddEmptyElementAfterSelection: Force create a new element after current
+    // element
+    function addEmptyElementAfterSelection() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            addElementAndSelectAfter(selection);
+        }
+        //TODO: what should we do with a list type?
     }
 
     //Element SelectUp: Select element above, make an empty element
@@ -193,12 +192,62 @@ function createLists(root, storage) {
         }
     }
 
+    //Element SelectDown: Select element below, make an empty element
+    // below, or select the list if falling off the bottom of the list
+    //List Down: select first element
+    function selectDown() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            if (selection.nextElementSibling) {
+                selection = select(selection.nextElementSibling);
+            } else {
+                if (selection.innerText === "") {
+                    selection = select(selection.parentElement);
+                } else {
+                    addElementAndSelectAfter(selection);
+                }
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            selection = select(selection.firstChild);
+        }
+    }
+
+    // ************** REMOVE BELOW HERE ****************
+    //---- Keyboard Event Handling ----
+    function noMods(eve) {
+        return !(eve.altKey || eve.ctrlKey || eve.metaKey || eve.shiftKey);
+    }
+
+    // There's probably a more efficient way to do ..
+    function exactMods(eve, mods) {
+        var posMods = ['alt', 'ctrl', 'meta', 'shift'];
+        var ret = 1;
+        for (var i = 0; i < posMods.length; ++i) {
+            var mod = posMods[i];
+            if (mods.includes(mod)) {
+                //Has to be set
+                ret &= eve[mod + 'Key'];
+            } else {
+                //Has to not be set
+                ret &= !(eve[mod + 'Key']);
+            }
+        }
+        return ret;
+    }
+
+    //Top level key handler - all keyboard input flows through here.
+    //TODO: Factor ths out into a Key Handler
+    function keyHandler(eve) {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            keyHandlerElement(eve);
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            keyHandlerList(eve);
+        }
+        trySave();
+    }
+
     // When a list is selected...
     function keyHandlerList(eve) {
         if (false) {
-        //Down (no modifiers): select first element
-        } else if (noMods(eve) && eve.keyCode === 40) {
-            selection = select(selection.firstChild);
         //Right (no modifiers): select list to right
         } else if (noMods(eve) && eve.keyCode === 39) {
             if (selection.nextSibling) {
@@ -257,28 +306,6 @@ function createLists(root, storage) {
             (eve.keyCode > 185 && eve.keyCode < 193) ||  // ;=,-./`
             (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
             appendSelection(eve.key);
-        //Backspace (no modifiers): remove last character
-        } else if (noMods(eve) && eve.keyCode === 8) {
-            backspace();
-        //\n (no modifiers): Force create a new element after current element
-        } else if (noMods(eve) && eve.keyCode === 13) {
-            addElementAndSelectAfter(selection);
-        //\n (+shift): append a newline in current element
-        } else if (exactMods(eve, ['shift']) && eve.keyCode === 13) {
-            appendSelection('\n');
-        //Down (no modifiers): Select element below, make an empty element
-        // below, or select the list if falling off the bottom of the list
-        } else if (noMods(eve) && eve.keyCode === 40) {
-            if (selection.nextElementSibling) {
-                selection = select(selection.nextElementSibling);
-            } else {
-                if (selection.innerText === "") {
-                    selection = select(selection.parentElement);
-                } else {
-                    addElementAndSelectAfter(selection);
-                }
-            }
-        //Up (ctrl+shift): Move selection up
         } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 38) {
             deselectAllText();
             if (selection.previousElementSibling) {
@@ -368,26 +395,7 @@ function createLists(root, storage) {
             if (DEBUG_KEYS) { console.log(eve) };
         }
     }
-
-    function backspace() {
-        if (selection) {
-            //Is a div, has text, take off the last character
-            if (selection.innerText !== "") {
-                selection.innerText = selection.innerText.slice(0, -1);
-            } else {
-                //Remove until there's only a blank element
-                if (selection.previousElementSibling !== null) {
-                    toSelect = selection.previousElementSibling;
-                    selection.remove();
-                    selection = select(toSelect);
-                } else if (selection.nextElementSibling !== null) {
-                    toSelect = selection.nextElementSibling;
-                    selection.remove();
-                    selection = select(toSelect);
-                }
-            }
-        }
-    }
+    // ************** REMOVE ABOVE HERE ****************
 
     function findClosest(ele, list) {
         var rect = ele.getBoundingClientRect();
@@ -561,10 +569,14 @@ function createLists(root, storage) {
         resetList,
         stringify,
         fromString,
+        trySave,
 
         // Actions
-        getSelectionType,
-        selectUp
+        chop,
+        appendNewline,
+        addEmptyElementAfterSelection,
+        selectUp,
+        selectDown
     };
 }
 
