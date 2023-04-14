@@ -26,10 +26,15 @@ function createKeyHandler(lists) {
             "help": "Append a newline to the selected element.",
             "function": lists.appendNewline
         },
-        "AddEmptyElementAfterSelection": {
-            "group": "",
+        "Delete": {
+            "group": "Item Manipulation",
+            "help": "Delete the selected element or list.",
+            "function": lists.deleteSelection
+        },
+        "ForceAddEmptyElement": {
+            "group": "Item Manipulation",
             "help": "Force add an empty element after selection.",
-            "function": lists.addEmptyElementAfterSelection
+            "function": lists.forceAddEmptyElement
         },
         "SelectUp": {
             "group": "Selection Movement",
@@ -50,6 +55,26 @@ function createKeyHandler(lists) {
             "group": "Selection Movement",
             "help": "Select element to the right or create list to the right.",
             "function": lists.selectRight
+        },
+        "MoveUp": {
+            "group": "Move Selection",
+            "help": "Move element 'above' current element.",
+            "function": lists.moveUp
+        },
+        "MoveDown": {
+            "group": "Move Selection",
+            "help": "Move element 'below' current element.",
+            "function": lists.moveDown
+        },
+        "MoveLeft": {
+            "group": "Move Selection",
+            "help": "Move list or element to the left, create a new list if necessary.",
+            "function": lists.moveLeft
+        },
+        "MoveRight": {
+            "group": "Move Selection",
+            "help": "Move list or element to the right, create a new list if necessary.",
+            "function": lists.moveRight
         }
     }
 
@@ -57,11 +82,16 @@ function createKeyHandler(lists) {
         //TODO: Clear all bindings first.
         bindKeyToAction("Backspace", "Chop");
         bindKeyToAction("ShiftEnter", "AppendNewline");
-        bindKeyToAction("Enter", "AddEmptyElementAfterSelection");
+        bindKeyToAction("Delete", "Delete");
+        bindKeyToAction("Enter", "ForceAddEmptyElement");
         bindKeyToAction("ArrowUp", "SelectUp");
         bindKeyToAction("ArrowDown", "SelectDown");
         bindKeyToAction("ArrowLeft", "SelectLeft");
         bindKeyToAction("ArrowRight", "SelectRight");
+        bindKeyToAction("CtrlShiftArrowUp", "MoveUp");
+        bindKeyToAction("CtrlShiftArrowDown", "MoveDown");
+        bindKeyToAction("CtrlShiftArrowLeft", "MoveLeft");
+        bindKeyToAction("CtrlShiftArrowRight", "MoveRight");
     }
 
     //key is a string built in the following way:

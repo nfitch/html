@@ -163,9 +163,56 @@ function createLists(root, storage) {
         }
     }
 
-    //AddEmptyElementAfterSelection: Force create a new element after current
-    // element
-    function addEmptyElementAfterSelection() {
+    //Element Delete: delete the current element
+    //List Delete: delete the current list and all elements
+    function deleteSelection() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            //Find the new thing to select... try up, down, left and right
+            var pe = selection.parentElement;
+            var ns = selection.previousSibling;
+            ns = ns ? ns : selection.nextSibling;
+            ns = (ns || !pe.previousSibling) ?
+                ns : findClosest(selection, pe.previousSibling);
+            ns = (ns || !pe.nextSibling) ?
+                ns : findClosest(selection, pe.nextSibling);
+            //If we didn't find anything it's the last element so just clear
+            // the contents and return
+            if (!ns) {
+                selection.innerText = "";
+                return;
+            }
+            //Delete the thing that was previously selected
+            var toDelete = selection;
+            selection = select(ns);
+            //Since select will collapse, it's possible that we're done with
+            // the parent already.
+            var dp = toDelete.parentElement;
+            if (dp) {
+                dp.removeChild(toDelete);
+                tryCollapse(dp);
+            }
+            toDelete.remove();
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            //Try left, then right
+            var ns = selection.previousSibling;
+            ns = ns ? ns : selection.nextSibling;
+            //Ok, there's only one list. So clear it out and return.
+            if (!ns) {
+                selection.replaceChildren();
+                selection.appendChild(newElementDiv());
+                //Just keep it selected.
+                return;
+            }
+            //Delete the thing that was previously selected
+            var toDelete = selection;
+            selection = select(ns);
+            toDelete.parentElement.removeChild(toDelete);
+            toDelete.remove();
+        }
+    }
+
+    //ForceAddEmptyElement: Force create a new element after current selection.
+    function forceAddEmptyElement() {
         if (selection && selection.liststype === ELEMENT_TYPE) {
             addElementAndSelectAfter(selection);
         }
@@ -227,6 +274,7 @@ function createLists(root, storage) {
             if (selection.previousSibling) {
                 selection = select(selection.previousSibling);
             }
+            //TODO: This should create an empty list to the Left
         }
     }
 
@@ -245,6 +293,73 @@ function createLists(root, storage) {
         } else if (selection && selection.liststype === LIST_TYPE) {
             if (selection.nextSibling) {
                 selection = select(selection.nextSibling);
+            }
+            //TODO: This should create an empty list to the Left
+        }
+    }
+
+    //Element MoveUp: Move selection up
+    function moveUp() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            deselectAllText();
+            if (selection.previousElementSibling) {
+                selection.previousElementSibling.before(selection);
+            }
+        }
+    }
+
+    //Element MoveDown: Move selection down
+    function moveDown() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            deselectAllText();
+            if (selection.nextElementSibling) {
+                selection.nextElementSibling.after(selection);
+            }
+        }
+    }
+
+    //Element MoveLeft: Move an element in the list to the left, creating a new
+    // list if necessary.
+    //List MoveLeft: move list to left
+    function moveLeft() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            deselectAllText();
+            if (selection.parentElement.previousSibling) {
+                var parentElement = selection.parentElement;
+                var ele = findClosest(
+                    selection, parentElement.previousSibling);
+                moveBeforeOrAfter(ele, selection);
+                tryCollapse(parentElement);
+            } else {
+                addListLeft(selection);
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            deselectAllText();
+            if (selection.previousSibling) {
+                selection.previousSibling.before(selection);
+            }
+        }
+    }
+
+    //Element MoveRight: Move an element in the list to the right, creating a
+    // new list if necessary.
+    //List MoveRight: move list to right
+    function moveRight() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            deselectAllText();
+            if (selection.parentElement.nextSibling) {
+                var parentElement = selection.parentElement;
+                var ele = findClosest(
+                    selection, parentElement.nextSibling);
+                moveBeforeOrAfter(ele, selection);
+                tryCollapse(parentElement);
+            } else {
+                addListRight(selection);
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            deselectAllText();
+            if (selection.nextSibling) {
+                selection.nextSibling.after(selection);
             }
         }
     }
@@ -277,45 +392,10 @@ function createLists(root, storage) {
     function keyHandler(eve) {
         if (selection && selection.liststype === ELEMENT_TYPE) {
             keyHandlerElement(eve);
-        } else if (selection && selection.liststype === LIST_TYPE) {
-            keyHandlerList(eve);
         }
         trySave();
     }
 
-    // When a list is selected...
-    function keyHandlerList(eve) {
-        if (false) {
-        //Left (ctrl+shift): move list to left
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
-            deselectAllText();
-            if (selection.previousSibling) {
-                selection.previousSibling.before(selection);
-            }
-        //Delete (no modifiers): delete the current list
-        } else if (noMods(eve) && eve.keyCode === 46) {
-            //Try left, then right
-            var ns = selection.previousSibling;
-            ns = ns ? ns : selection.nextSibling;
-            //Ok, there's only one list. So clear it out and return.
-            if (!ns) {
-                selection.replaceChildren();
-                selection.appendChild(newElementDiv());
-                //Just keep it selected.
-                return;
-            }
-            //Delete the thing that was previously selected
-            var toDelete = selection;
-            selection = select(ns);
-            toDelete.parentElement.removeChild(toDelete);
-            toDelete.remove();
-        //Log what falls through
-        } else {
-            if (DEBUG_KEYS) { console.log(eve) };
-        }
-    }
-
-    // When an element is selected...
     function keyHandlerElement(eve) {
         //Regular Typing, append to selected cell
         if ((noMods(eve) || exactMods(eve, ['shift'])) && (
@@ -328,72 +408,6 @@ function createLists(root, storage) {
             (eve.keyCode > 185 && eve.keyCode < 193) ||  // ;=,-./`
             (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
             appendSelection(eve.key);
-        //Up (ctrl+shift): Move selection up
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 38) {
-            deselectAllText();
-            if (selection.previousElementSibling) {
-                selection.previousElementSibling.before(selection);
-            }
-        //Down (ctrl+shift): Move selection down
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 40) {
-            deselectAllText();
-            if (selection.nextElementSibling) {
-                selection.nextElementSibling.after(selection);
-            }
-        //Right (ctrl+shift): Move an element in the list to the right,
-        // creating a new list if necessary
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
-            deselectAllText();
-            if (selection.parentElement.nextSibling) {
-                var parentElement = selection.parentElement;
-                var ele = findClosest(
-                    selection, parentElement.nextSibling);
-                moveBeforeOrAfter(ele, selection);
-                tryCollapse(parentElement);
-            } else {
-                addListRight(selection);
-            }
-        //Left (ctrl+shift): Move an element in the list to the left,
-        // creating a new list if necessary
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
-            deselectAllText();
-            if (selection.parentElement.previousSibling) {
-                var parentElement = selection.parentElement;
-                var ele = findClosest(
-                    selection, parentElement.previousSibling);
-                moveBeforeOrAfter(ele, selection);
-                tryCollapse(parentElement);
-            } else {
-                addListLeft(selection);
-            }
-        //Delete (no modifiers): delete the current element
-        } else if (noMods(eve) && eve.keyCode === 46) {
-            //Find the new thing to select... try up, down, left and right
-            var pe = selection.parentElement;
-            var ns = selection.previousSibling;
-            ns = ns ? ns : selection.nextSibling;
-            ns = (ns || !pe.previousSibling) ?
-                ns : findClosest(selection, pe.previousSibling);
-            ns = (ns || !pe.nextSibling) ?
-                ns : findClosest(selection, pe.nextSibling);
-            //If we didn't find anything it's the last element so just clear
-            // the contents and return
-            if (!ns) {
-                selection.innerText = "";
-                return;
-            }
-            //Delete the thing that was previously selected
-            var toDelete = selection;
-            selection = select(ns);
-            //Since select will collapse, it's possible that we're done with
-            // the parent already.
-            var dp = toDelete.parentElement;
-            if (dp) {
-                dp.removeChild(toDelete);
-                tryCollapse(dp);
-            }
-            toDelete.remove();
-            //Log what falls through
         } else {
             if (DEBUG_KEYS) { console.log(eve) };
         }
@@ -577,11 +591,16 @@ function createLists(root, storage) {
         // Actions
         chop,
         appendNewline,
-        addEmptyElementAfterSelection,
+        deleteSelection,
+        forceAddEmptyElement,
         selectUp,
         selectDown,
         selectLeft,
-        selectRight
+        selectRight,
+        moveUp,
+        moveDown,
+        moveLeft,
+        moveRight
     };
 }
 
