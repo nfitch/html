@@ -60,7 +60,15 @@ function createListParser(root) {
     };
 
     function parse(dataString) {
-        var data = JSON.parse(dataString);
+        var data;
+        try {
+            data = JSON.parse(dataString);
+        } catch (e) {
+            console.error("Error parsing data string as JSON.",
+                          dataString,
+                          e);
+            return false;
+        }
         if (!data.hasOwnProperty("version")) {
             data = mutateNotVersioned(data);
         }

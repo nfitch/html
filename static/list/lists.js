@@ -8,8 +8,8 @@ function createLists(root, storage) {
     //Constants
     const DEBUG_KEYS = false;
     const DEBUG_STORAGE = false;
-    const KELEMENT = 'type-kelement';
-    const KLIST = 'type-klist';
+    const ELEMENT_TYPE = 'lists-element';
+    const LIST_TYPE = 'lists-list';
     const SAVE_PERIOD = 3000;
     const DATA_STORAGE_KEY = "listData";
 
@@ -47,7 +47,7 @@ function createLists(root, storage) {
     function newListDiv() {
         var div = document.createElement('div');
         div.classList.add('list');
-        div.ktype = KLIST;
+        div.liststype = LIST_TYPE;
         return div;
     }
 
@@ -91,7 +91,7 @@ function createLists(root, storage) {
     function newElementDiv() {
         var div = document.createElement('div');
         div.classList.add('list-element');
-        div.ktype = KELEMENT;
+        div.liststype = ELEMENT_TYPE;
         return div;
     }
 
@@ -112,6 +112,7 @@ function createLists(root, storage) {
         selection.innerText += s;
     }
 
+    // ************** REMOVE BELOW HERE ****************
     //---- Keyboard Event Handling ----
     function noMods(eve) {
         return !(eve.altKey || eve.ctrlKey || eve.metaKey || eve.shiftKey);
@@ -133,13 +134,14 @@ function createLists(root, storage) {
         }
         return ret;
     }
+    // ************** REMOVE ABOVE HERE ****************
 
     //Only save stuff periodically
     function trySave() {
         if (!saveScheduled) {
             setTimeout(function () {
                 saveToStorage();
-                saveScheduled = false; //Huh, probably private soon
+                saveScheduled = false;
             }, SAVE_PERIOD)
             saveScheduled = true;
         }
@@ -155,22 +157,45 @@ function createLists(root, storage) {
         }
     }
 
+    //Actions on the lists
+    function getSelectionType() {
+        return selection.liststype;
+    }
+
     //Top level key handler - all keyboard input flows through here.
     //TODO: Factor ths out into a Key Handler
     function keyHandler(eve) {
-        if (selection && selection.ktype === KELEMENT) {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
             keyHandlerElement(eve);
-        } else if (selection && selection.ktype === KLIST) {
+        } else if (selection && selection.liststype === LIST_TYPE) {
             keyHandlerList(eve);
         }
         trySave();
     }
 
+    //Element SelectUp: Select element above, make an empty element
+    // above, or select the list if falling off the top of the list
+    //List SelectUp (no modifiers): select last element
+    function selectUp() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            if (selection.previousElementSibling) {
+                selection = select(selection.previousElementSibling);
+            } else {
+                //Going off the "top", then we select the container
+                if (selection.innerText === "") {
+                    selection = select(selection.parentElement);
+                } else {
+                    addElementAndSelectBefore(selection);
+                }
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            selection = select(selection.lastChild);
+        }
+    }
+
     // When a list is selected...
     function keyHandlerList(eve) {
-        //Up (no modifiers): select last element
-        if (noMods(eve) && eve.keyCode === 38) {
-            selection = select(selection.lastChild);
+        if (false) {
         //Down (no modifiers): select first element
         } else if (noMods(eve) && eve.keyCode === 40) {
             selection = select(selection.firstChild);
@@ -241,19 +266,6 @@ function createLists(root, storage) {
         //\n (+shift): append a newline in current element
         } else if (exactMods(eve, ['shift']) && eve.keyCode === 13) {
             appendSelection('\n');
-        //Up (no modifiers): Select element above, make an empty element
-        // above, or select the list if falling off the top of the list
-        } else if (noMods(eve) && eve.keyCode === 38) {
-            if (selection.previousElementSibling) {
-                selection = select(selection.previousElementSibling);
-            } else {
-                //Going off the "top", then we select the container
-                if (selection.innerText === "") {
-                    selection = select(selection.parentElement);
-                } else {
-                    addElementAndSelectBefore(selection);
-                }
-            }
         //Down (no modifiers): Select element below, make an empty element
         // below, or select the list if falling off the bottom of the list
         } else if (noMods(eve) && eve.keyCode === 40) {
@@ -434,11 +446,11 @@ function createLists(root, storage) {
         //We don't want to collapse when there's only one
         // "empty" element and either the element or the
         // list is selected.
-        if (e.ktype === KELEMENT &&
+        if (e.liststype === ELEMENT_TYPE &&
             selection === e.parentElement &&
             e.parentElement.children.length === 1) {
             return false;
-        } else if (e.ktype === KLIST &&
+        } else if (e.liststype === LIST_TYPE &&
                    selection === e.firstChild &&
                    e.children.length === 1) {
             return false;
@@ -446,7 +458,7 @@ function createLists(root, storage) {
 
         //Collapse the list or the element
         var ret = false;
-        if (e.ktype === KLIST) {
+        if (e.liststype === LIST_TYPE) {
             if (e.children.length === 1) {
                 if (tryCollapse(e.firstChild)) {
                     e.remove();
@@ -456,7 +468,7 @@ function createLists(root, storage) {
                 e.remove();
                 ret = true;
             }
-        } else if (e.ktype === KELEMENT) {
+        } else if (e.liststype === ELEMENT_TYPE) {
             if (e.innerText === "") {
                 e.remove();
                 ret = true;
@@ -548,7 +560,11 @@ function createLists(root, storage) {
         keyHandler,
         resetList,
         stringify,
-        fromString
+        fromString,
+
+        // Actions
+        getSelectionType,
+        selectUp
     };
 }
 

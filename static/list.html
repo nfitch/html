@@ -17,10 +17,10 @@
     unfulfilled TODO list!
     - Use a map for KeyHandlers rather than long if/else chain
     - Help for new users (and me!)
+    - Cut/Copy/Paste
     - CSV save/load (probably introduce an external dependency :sad-panda:)
     - Named Views (<2 clicks New/Save As/Load/Delete)
     - "Easy" Saving / Loading somewhere other than Local Storage
-    - Cut/Copy/Paste
     - Type mode on/off switch
     - Slam cursor & selection to extremities w/single key combinations
     - Abstract the DOM interactions (super intertwined makes some things harder)
@@ -31,6 +31,7 @@
     - Checklist mode
     - Lists can have widths (some wider than others)
        - Will persist in Local Storage and JSON representations
+    - Mouse interactions (click to select, multi-select, drag & drop, checklist)
     - Per-user keyboard binding remaps (emacs, vim bindings?)
     - Edit element as HTML (not sure if I really want to go there)
 
@@ -42,7 +43,7 @@
     <title>List</title>
     <link rel="stylesheet" href="./list/list-styling.css">
     <script type="module" src="./list/lists.js"></script>
-    <script type="module" src="./list/list-parser.js"></script>
+    <script type="module" src="./list/key-handler.js"></script>
     <script type="text/javascript">
       const DEFAULT_FILENAME = "list.json";
       var lists;
@@ -58,8 +59,11 @@
               document.getElementById("list-outer"),
               localStorage
           );
+          keyHandler = createKeyHandler(lists);
 
+          //TODO: whittle down what's in lists.keyHandler
           document.addEventListener('keydown', lists.keyHandler);
+          document.addEventListener('keydown', keyHandler.handle);
           lists.init();
       }
 
