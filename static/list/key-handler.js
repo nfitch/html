@@ -40,15 +40,28 @@ function createKeyHandler(lists) {
             "group": "Selection Movement",
             "help": "Select element 'below' current element or the list.",
             "function": lists.selectDown
+        },
+        "SelectLeft": {
+            "group": "Selection Movement",
+            "help": "Select element to the left or create list to the left.",
+            "function": lists.selectLeft
+        },
+        "SelectRight": {
+            "group": "Selection Movement",
+            "help": "Select element to the right or create list to the right.",
+            "function": lists.selectRight
         }
     }
 
     function setDefaultBindings() {
+        //TODO: Clear all bindings first.
         bindKeyToAction("Backspace", "Chop");
         bindKeyToAction("ShiftEnter", "AppendNewline");
         bindKeyToAction("Enter", "AddEmptyElementAfterSelection");
         bindKeyToAction("ArrowUp", "SelectUp");
         bindKeyToAction("ArrowDown", "SelectDown");
+        bindKeyToAction("ArrowLeft", "SelectLeft");
+        bindKeyToAction("ArrowRight", "SelectRight");
     }
 
     //key is a string built in the following way:

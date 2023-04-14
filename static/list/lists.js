@@ -211,6 +211,44 @@ function createLists(root, storage) {
         }
     }
 
+    //Element SelectLeft: Select an element in the list to the left or create a
+    // new list with an empty element to the right
+    //List SelectLeft: select list to left
+    function selectLeft() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            if (selection.parentElement.previousSibling) {
+                var ele = findClosest(
+                    selection, selection.parentElement.previousSibling);
+                selection = select(ele);
+            } else {
+                addEmptyListLeft(selection);
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            if (selection.previousSibling) {
+                selection = select(selection.previousSibling);
+            }
+        }
+    }
+
+    //Element SelectRight: Select an element in the list to the right or create
+    // a new list with an empty element to the right
+    //List SelectRight: select list to right
+    function selectRight() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            if (selection.parentElement.nextSibling) {
+                var ele = findClosest(
+                    selection, selection.parentElement.nextSibling);
+                selection = select(ele);
+            } else {
+                addEmptyListRight(selection);
+            }
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            if (selection.nextSibling) {
+                selection = select(selection.nextSibling);
+            }
+        }
+    }
+
     // ************** REMOVE BELOW HERE ****************
     //---- Keyboard Event Handling ----
     function noMods(eve) {
@@ -248,22 +286,6 @@ function createLists(root, storage) {
     // When a list is selected...
     function keyHandlerList(eve) {
         if (false) {
-        //Right (no modifiers): select list to right
-        } else if (noMods(eve) && eve.keyCode === 39) {
-            if (selection.nextSibling) {
-                selection = select(selection.nextSibling);
-            }
-        //Left (no modifiers): select list to left
-        } else if (noMods(eve) && eve.keyCode === 37) {
-            if (selection.previousSibling) {
-                selection = select(selection.previousSibling);
-            }
-        //Right (ctrl+shift): move list to right
-        } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 39) {
-            deselectAllText();
-            if (selection.nextSibling) {
-                selection.nextSibling.after(selection);
-            }
         //Left (ctrl+shift): move list to left
         } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 37) {
             deselectAllText();
@@ -306,6 +328,7 @@ function createLists(root, storage) {
             (eve.keyCode > 185 && eve.keyCode < 193) ||  // ;=,-./`
             (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
             appendSelection(eve.key);
+        //Up (ctrl+shift): Move selection up
         } else if (exactMods(eve, ['ctrl', 'shift']) && eve.keyCode === 38) {
             deselectAllText();
             if (selection.previousElementSibling) {
@@ -316,26 +339,6 @@ function createLists(root, storage) {
             deselectAllText();
             if (selection.nextElementSibling) {
                 selection.nextElementSibling.after(selection);
-            }
-        //Right (no modifiers): Select an element in the list to the right or
-        // create a new list with an empty element to the right
-        } else if (noMods(eve) && eve.keyCode === 39) {
-            if (selection.parentElement.nextSibling) {
-                var ele = findClosest(
-                    selection, selection.parentElement.nextSibling);
-                selection = select(ele);
-            } else {
-                addEmptyListRight(selection);
-            }
-        //Left (no modifiers): Select an element in the list to the left or
-        // create a new list with an empty element to the right
-        } else if (noMods(eve) && eve.keyCode === 37) {
-            if (selection.parentElement.previousSibling) {
-                var ele = findClosest(
-                    selection, selection.parentElement.previousSibling);
-                selection = select(ele);
-            } else {
-                addEmptyListLeft(selection);
             }
         //Right (ctrl+shift): Move an element in the list to the right,
         // creating a new list if necessary
@@ -576,7 +579,9 @@ function createLists(root, storage) {
         appendNewline,
         addEmptyElementAfterSelection,
         selectUp,
-        selectDown
+        selectDown,
+        selectLeft,
+        selectRight
     };
 }
 
