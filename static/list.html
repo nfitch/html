@@ -15,7 +15,7 @@
 
     I may or may not ever do this stuff, but, you know, everything needs its
     unfulfilled TODO list!
-    - Help for new users (and me!)
+    - Merge list from load (in addition to load and replace)
     - Cut/Copy/Paste
     - CSV save/load (probably introduce an external dependency :sad-panda:)
     - Named Views (<2 clicks New/Save As/Load/Delete)
@@ -25,14 +25,14 @@
     - Abstract the DOM interactions (super intertwined makes some things harder)
     - List headers (type when list is highlighted)
     - Multi Select & all the implications
-    - Mouse Actions (drag/drop & select (ctrl to multi))
     - Action Stack + undo/redo
     - Checklist mode
     - Lists can have widths (some wider than others)
        - Will persist in Local Storage and JSON representations
     - Mouse interactions (click to select, multi-select, drag & drop, checklist)
-    - Per-user keyboard binding remaps (emacs, vim bindings?)
+    - Per-user keyboard bindings + saved remaps (emacs, vim bindings?)
     - Edit element as HTML (not sure if I really want to go there)
+    - Named Horizontal Bars (not sure if I really want to go there)
 
     Of course, the holy grail is an Excalidraw-like multi-user experience, but
     that would take real engineering... maybe someday...
@@ -47,6 +47,7 @@
     <script type="text/javascript">
       const DEFAULT_FILENAME = "list.json";
       var lists;
+
       function init() {
           //Disable the form
           var cf = document.getElementById("control-form");
@@ -63,6 +64,21 @@
 
           document.addEventListener('keydown', keyHandler.handle);
           lists.init();
+
+          var helpContainer = document.getElementById("help-container");
+          toggleHelp();
+          keyHandler.buildHelp(helpContainer);
+      }
+
+      function toggleHelp() {
+          var helpContainer = document.getElementById("help-container");
+          if (helpContainer.style.display === "none") {
+              helpContainer.style.display = "block";
+              document.getElementById("help-button").value = "Hide Help";
+          } else {
+              helpContainer.style.display = "none";
+              document.getElementById("help-button").value = "Show Help";
+          }
       }
 
       function resetList() {
@@ -96,13 +112,21 @@
     </script>
   </head>
   <body onload="init()">
+    <div id="help-container" class="help-container"></div>
     <form id="control-form">
-      <input type="button" name="Reset" value="Reset" onClick="resetList()">
-      <input type="button" name="Save" value="Save" onClick="saveJSON()">
-      <input type="button" name="Load" value="Load"
-             onClick="document.getElementById('load-file-select').click()">
-      <input type="file" id="load-file-select" accept="text/json,.json"
-             onchange="loadJSON()" style="display:none;">
+      <table border="0" padding="0" spacing="0" width="100%">
+        <tr><td align="left">
+            <input type="button" name="Reset" value="Reset" onClick="resetList()">
+            <input type="button" name="Save" value="Save" onClick="saveJSON()">
+            <input type="button" name="Load" value="Load"
+                   onClick="document.getElementById('load-file-select').click()">
+            <input type="file" id="load-file-select" accept="text/json,.json"
+                   onchange="loadJSON()" style="display:none;">
+          </td><td align="right">
+            <input type="button" id="help-button" name="Help"
+                   value="Show Help" onClick="toggleHelp()">
+        </td></tr>
+      </table>
     </form>
     <hr>
     <div id="list-outer" class="list-outer"></div>

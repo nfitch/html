@@ -1,6 +1,8 @@
 /**
  * https://www.joshwcomeau.com/css/interactive-guide-to-flexbox/
  */
+
+/* --- List Styling --- */
 .list-outer {
     display: flex;
     /* TODO: Remove these to hide the border
@@ -71,64 +73,84 @@ input[type="button"]:hover {
     transition-duration: 0.1s;
 }
 
+/* --- Form Styling --- */
+
 form {
     padding: 0px;
     margin: 0px;
     margin-bottom: 10px;
 }
 
-/**
- * https://stackoverflow.com/questions/38850419/how-to-create-multi-color-border-with-css
- */
-.list-element-1-color {
-    font-size: 12px;
-    font-family: Verdana, sans-serif;
-    border-color: #BEBEBE;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 3px;
+/* --- Help Styling --- */
 
-    border-width: 2px; /* 1 unselected */
-    padding: 2px; /* 2 unselected */
-    margin: 1px; /* 2 unselected */
-    border-image: linear-gradient(
-        to right,
-        green 0% 100%) 1;
+.help-container {
 }
 
-.list-element-3-color {
-    font-size: 12px;
-    font-family: Verdana, sans-serif;
+.help {
     border-color: #BEBEBE;
     border-style: solid;
-    border-width: 1px;
     border-radius: 3px;
-
-    border-width: 2px; /* 1 unselected */
-    padding: 2px; /* 2 unselected */
-    margin: 1px; /* 2 unselected */
-    border-image: linear-gradient(
-        to right,
-        green 0% 33%,
-        blue 33% 66%,
-        purple 66% 100%) 1;
+    border-width: 1px;
+    background-color: #FCFCF7;
 }
 
-.list-element-4-color {
+.help-header {
     font-size: 12px;
     font-family: Verdana, sans-serif;
+    padding: 2px;
+    margin: 2px;
+}
+
+.help-groups-container {
+    display: flex;
+    flex-direction: row;
+    flex-basis: 300px;
+}
+
+.help-group {
     border-color: #BEBEBE;
     border-style: solid;
-    border-width: 1px;
     border-radius: 3px;
+    border-width: 1px;
+    padding: 2px;
+    margin: 2px;
+    flex-grow: 1;
+}
 
-    border-width: 2px; /* 1 unselected */
-    padding: 2px; /* 2 unselected */
-    margin: 1px; /* 2 unselected */
-    border-image: linear-gradient(
-        to right,
-        grey 0% 25%,
-        yellow 25% 50%,
-        red 50% 75%,
-        teal 75% 100%) 1;
+.help-group-header {
+    font-size: 12px;
+    font-family: Verdana, sans-serif;
+    font-weight: bold;
+    padding: 2px;
+    margin: 2px;
+}
+
+.help-action-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.help-action {
+    font-size: 11px;
+    font-family: Verdana, sans-serif;
+    font-weight: normal;
+    padding: 2px;
+    margin: 2px;
+}
+
+.help-key-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.help-key {
+    font-size: 11px;
+    font-family: Verdana, sans-serif;
+    font-weight: normal;
+    border-color: #BEBEBE;
+    border-style: solid;
+    border-radius: 3px;
+    border-width: 1px;
+    padding: 2px;
+    margin: 2px;
 }

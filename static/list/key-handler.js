@@ -14,6 +14,8 @@
 function createKeyHandler(lists) {
     var DEBUG = false;
     var fnbindings = {};
+    //Per docs, Maps are ordered by insertion order.  That's what we want here.
+    var helpObject = new Map();
 
     const actions = {
         "Chop": {
@@ -79,7 +81,11 @@ function createKeyHandler(lists) {
     }
 
     function setDefaultBindings() {
-        //TODO: Clear all bindings first.
+        //Clear out the current bindings.
+        fnbindings = {};
+        helpObject = new Map();
+
+        //Set up all the default bindings.
         bindKeyToAction("Backspace", "Chop");
         bindKeyToAction("ShiftEnter", "AppendNewline");
         bindKeyToAction("Delete", "Delete");
@@ -110,7 +116,52 @@ function createKeyHandler(lists) {
                           key, action, actions[action].function);
             return false;
         }
+        //Build the function map.
         fnbindings[key] = actions[action].function;
+
+        //Build the help object as we're adding... the order they are added
+        // determines the order the help will come out.
+        //
+        // Objects we're building from:
+        // "[Action]": {
+        //     "group": "[Group]",
+        //     "help": "[Help Text]",
+        //     "function": [function]
+        // }
+        // key ex: CtrlShiftArrowDown
+        //
+        // Mutate them to:
+        // Group[] -> { group, action[] } -> { action, help, key[] }
+        var a = actions[action];
+        if (!helpObject.has(a.group)) {
+            var nm = new Map();
+            nm.set("group", a.group);
+            nm.set("actions", new Map());
+            helpObject.set(a.group, nm);
+        }
+        var hgroup = helpObject.get(a.group);
+        if (!hgroup.get("actions").has(action)) {
+            var nm = new Map();
+            nm.set("action", textify(action) + ":");
+            nm.set("help", a.help);
+            nm.set("keys", []);
+            hgroup.get("actions").set(action, nm);
+
+        }
+        hgroup.get("actions").get(action).get("keys").push(textifyMods(key));
+    }
+
+    function textifyMods(s) {
+        s = s.replace("Alt", "Alt + ");
+        s = s.replace("Ctrl", "Ctrl + ");
+        s = s.replace("Meta", "Meta + ");
+        s = s.replace("Shift", "Shift + ");
+        return s;
+    }
+
+    function textify(s) {
+        s = s.replace(/([A-Z])/g, ' $1').trim();
+        return s;
     }
 
     function modsString(eve) {
@@ -142,10 +193,76 @@ function createKeyHandler(lists) {
         }
     }
 
+    function newDiv(css, text) {
+        var d = document.createElement("div");
+        if (css) {
+            d.classList.add(css);
+        }
+        if (text) {
+            d.innerHTML = text;
+        }
+        return d;
+    }
+
+    //This is kinda painful...
+    function buildHelp(root) {
+        var intro = `
+             Rapidly create and manage lists of things.  It is entirely keyboard
+             driven so that the interface "gets out of your way".<br><br>
+
+             To get started: Type something and press enter.  Then type
+             something else and press enter.  You now have two elements in a
+             first list.  Press the up or down arrows to select the other
+             element (or the list).  Press the right or left arrow to create a
+             new list to the right or left.  Add more elements.  "Grab" an
+             element with "Ctrl + Shift", then use the arrow keys to move the
+             element around (try up, down, moving it off the current list, etc.
+             Press delete to delete an element.  Those are the basics...<br><br>
+
+             Otherwise, these are actions that are triggered by key
+             combinations.  Hover over the action to get a description.
+          `;
+        var h = newDiv('help');
+        root.appendChild(h);
+        var hh = newDiv('help-header', intro);
+        h.appendChild(hh);
+        var hg = newDiv('help-groups-container');
+        h.appendChild(hg);
+        var rhr = newDiv(null, '<hr>');
+        root.appendChild(rhr);
+
+        //Each of the groups
+        helpObject.forEach(function (value, key, map) {
+            var gd = newDiv('help-group');
+            hg.appendChild(gd);
+            //Group Name (Header)
+            var hgh = newDiv('help-group-header', value.get("group"));
+            gd.appendChild(hgh);
+            var hbr = newDiv(null, '<hr>');
+            gd.appendChild(hbr);
+
+            value.get("actions").forEach(function (aval, akey) {
+                //Action
+                var actcnt = newDiv('help-action-container');
+                gd.appendChild(actcnt);
+                var act = newDiv('help-action', aval.get("action"));
+                actcnt.appendChild(act);
+                //Key Bindings
+                var keycnt = newDiv('help-key-container');
+                actcnt.appendChild(keycnt);
+                aval.get("keys").forEach(function (kval) {
+                    var keycom = newDiv('help-key', kval);
+                    keycnt.appendChild(keycom);
+                });
+            });
+        });
+    }
+
     setDefaultBindings();
     //This is where we should localStorage override on load
     return {
-        handle
+        handle,
+        buildHelp
     };
 }
 
