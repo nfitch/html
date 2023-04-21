@@ -15,7 +15,6 @@
 
     I may or may not ever do this stuff, but, you know, everything needs its
     unfulfilled TODO list!
-    - Merge list from load (in addition to load and replace)
     - Cut/Copy/Paste
     - CSV save/load (probably introduce an external dependency :sad-panda:)
     - Named Views (<2 clicks New/Save As/Load/Delete)
@@ -97,14 +96,21 @@
       }
 
       function loadJSON() {
-          var lfs = document.getElementById("load-file-select");
-          //We're only loading the first file
-          var file = lfs.files[0];
+          loadFileContents(document.getElementById("load-file-select"), true);
+      }
+
+      function mergeJSON() {
+          loadFileContents(document.getElementById("merge-file-select"), false);
+      }
+
+      function loadFileContents(fileSelect, clearList) {
+          //We're only loading the first file for now.
+          //TODO: we can load and merge on multiple select... right?
+          var file = fileSelect.files[0];
           var fr = new FileReader();
           fr.onload = function (eve) {
-              if (!lists.fromString(eve.target.result)) {
+              if (!lists.loadString(eve.target.result, clearList)) {
                   alert("Failed to load file.  Check console for errors.");
-                  lists.resetList();
               }
           }
           fr.readAsText(file);
@@ -122,6 +128,10 @@
                    onClick="document.getElementById('load-file-select').click()">
             <input type="file" id="load-file-select" accept="text/json,.json"
                    onchange="loadJSON()" style="display:none;">
+            <input type="button" name="Merge" value="Merge"
+                   onClick="document.getElementById('merge-file-select').click()">
+            <input type="file" id="merge-file-select" accept="text/json,.json"
+                   onchange="mergeJSON()" style="display:none;">
           </td><td align="right">
             <input type="button" id="help-button" name="Help"
                    value="Show Help" onClick="toggleHelp()">

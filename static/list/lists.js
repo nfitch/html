@@ -472,7 +472,7 @@ function createLists(root, storage) {
         if (DEBUG_STORAGE) {
             console.log("Loading from local storage:", dataString);
         }
-        if(!fromString(dataString)) {
+        if(!loadString(dataString, true)) {
             console.error("Failed to parse what was in local storage.",
                           "Check console error log.");
             //TODO: Disable autosaving?
@@ -484,7 +484,7 @@ function createLists(root, storage) {
         return parser.stringify();
     }
 
-    function fromString(dataString) {
+    function loadString(dataString, clear) {
         if (DEBUG_STORAGE) { console.log("dataString", dataString); }
         var data = parser.parse(dataString);
         if (DEBUG_STORAGE) { console.log("Parsed data", data); }
@@ -498,8 +498,10 @@ function createLists(root, storage) {
             return true;
         }
 
-	//Clear, then load.
-        clearData();
+	//Maybe clear, then load.
+        if (clear) {
+            clearData();
+        }
 
 	//Try to load the data...
         //TODO: Insert all the other fields into the dom overlay
@@ -534,7 +536,7 @@ function createLists(root, storage) {
         init,
         resetList,
         stringify,
-        fromString,
+        loadString,
         trySave,
 
         // Actions on Selection
