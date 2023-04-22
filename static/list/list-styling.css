@@ -65,7 +65,6 @@ input[type="button"] {
     border-width: 1px;
     appearance: auto;
     background-color: #FAFBFC;
-    cursor: pointer;
 }
 
 input[type="button"]:hover {
@@ -136,6 +135,7 @@ form {
     font-weight: normal;
     padding: 2px;
     margin: 2px;
+    cursor: help;
 }
 
 .help-key-container {

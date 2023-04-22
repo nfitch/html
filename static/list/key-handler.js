@@ -96,9 +96,8 @@ function createKeyHandler(lists) {
         },
         "Paste": {
             "group": "Edit",
-            "help": "Paste.  If you had previously copied an element, " +
-                "a duplicate will be created.  If you have text on the " +
-                "clipboard a new element with that text will be crated.",
+            "help": "Paste.  If you had previously cut or copied an element, " +
+                "a duplicate will be created after the selected element.",
             "function": lists.paste
         }
     }
@@ -225,13 +224,17 @@ function createKeyHandler(lists) {
         }
     }
 
-    function newDiv(css, text) {
+    //title is the tooltip...
+    function newDiv(css, text, title) {
         var d = document.createElement("div");
         if (css) {
             d.classList.add(css);
         }
         if (text) {
             d.innerHTML = text;
+        }
+        if (title) {
+            d.title = title;
         }
         return d;
     }
@@ -290,7 +293,8 @@ function createKeyHandler(lists) {
                 //Action
                 var actcnt = newDiv('help-action-container');
                 gd.appendChild(actcnt);
-                var act = newDiv('help-action', aval.get("action"));
+                var act = newDiv('help-action', aval.get("action"),
+                                 aval.get("help"));
                 actcnt.appendChild(act);
                 //Key Bindings
                 var keycnt = newDiv('help-key-container');
