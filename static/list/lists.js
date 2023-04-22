@@ -4,6 +4,7 @@ function createLists(root, storage) {
     var selection;
     var saveScheduled = false;
     var parser = createListParser(root);
+    var cutOrCopied = null;
 
     //Constants
     const DEBUG_STORAGE = false;
@@ -22,6 +23,10 @@ function createLists(root, storage) {
             //Empty List
             initMinimum();
         }
+    }
+
+    function toggleStorageDebug() {
+        DEBUG_STORAGE = !DEBUG_STORAGE;
     }
 
     //---- Clear, reset, init minimum ----
@@ -363,6 +368,35 @@ function createLists(root, storage) {
         }
     }
 
+    //Element Cut: Cut the current element.
+    //List Cut: Not implemented.
+    function cut() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            cutOrCopied = selection.innerText;
+            deleteSelection();
+        }
+    }
+
+    //Element Copy: Copy the current element.
+    //List Copy: Not implemented.
+    function copy() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            cutOrCopied = selection.innerText;
+        }
+    }
+
+    //Element Paste: Paste a previously copied element or text from the
+    // clipboard.
+    //List Paste: Not implemented.
+    function paste() {
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            if (cutOrCopied !== null) {
+                addElementAndSelectAfter(selection);
+                appendSelection(cutOrCopied);
+            }
+        }
+    }
+
     //---- Finding and moving ----
     function findClosest(ele, list) {
         var rect = ele.getBoundingClientRect();
@@ -534,6 +568,7 @@ function createLists(root, storage) {
     //Public Methods.
     return {
         init,
+        toggleStorageDebug,
         resetList,
         stringify,
         loadString,
@@ -552,7 +587,10 @@ function createLists(root, storage) {
         moveUp,
         moveDown,
         moveLeft,
-        moveRight
+        moveRight,
+        cut,
+        copy,
+        paste
     };
 }
 

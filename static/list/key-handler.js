@@ -17,6 +17,10 @@ function createKeyHandler(lists) {
     //Per docs, Maps are ordered by insertion order.  That's what we want here.
     var helpObject = new Map();
 
+    function toggleDebug() {
+        DEBUG = !DEBUG;
+    }
+
     const actions = {
         "Chop": {
             "group": "Text Editing",
@@ -70,13 +74,32 @@ function createKeyHandler(lists) {
         },
         "MoveLeft": {
             "group": "Move Selection",
-            "help": "Move list or element to the left, create a new list if necessary.",
+            "help": "Move list or element to the left, create a new list " +
+                "if necessary.",
             "function": lists.moveLeft
         },
         "MoveRight": {
             "group": "Move Selection",
-            "help": "Move list or element to the right, create a new list if necessary.",
+            "help": "Move list or element to the right, create a new list " +
+                "if necessary.",
             "function": lists.moveRight
+        },
+        "Cut": {
+            "group": "Edit",
+            "help": "Cut the current element.",
+            "function": lists.cut
+        },
+        "Copy": {
+            "group": "Edit",
+            "help": "Copy the current element.",
+            "function": lists.copy
+        },
+        "Paste": {
+            "group": "Edit",
+            "help": "Paste.  If you had previously copied an element, " +
+                "a duplicate will be created.  If you have text on the " +
+                "clipboard a new element with that text will be crated.",
+            "function": lists.paste
         }
     }
 
@@ -98,6 +121,13 @@ function createKeyHandler(lists) {
         bindKeyToAction("CtrlShiftArrowDown", "MoveDown");
         bindKeyToAction("CtrlShiftArrowLeft", "MoveLeft");
         bindKeyToAction("CtrlShiftArrowRight", "MoveRight");
+        bindKeyToAction("CtrlMetaArrowUp", "MoveUp");
+        bindKeyToAction("CtrlMetaArrowDown", "MoveDown");
+        bindKeyToAction("CtrlMetaArrowLeft", "MoveLeft");
+        bindKeyToAction("CtrlMetaArrowRight", "MoveRight");
+        bindKeyToAction("Ctrlx", "Cut");
+        bindKeyToAction("Ctrlc", "Copy");
+        bindKeyToAction("Ctrlv", "Paste");
     }
 
     //key is a string built in the following way:
@@ -180,6 +210,7 @@ function createKeyHandler(lists) {
         if (fnbindings[k]) {
             fnbindings[k]();
             lists.trySave();
+            eve.preventDefault();
         } else if ((mods === "" || mods === "Shift") && (
             (eve.keyCode > 47 && eve.keyCode < 58) ||     // numbers
             eve.keyCode == 32 ||                          // spacebar
@@ -190,6 +221,7 @@ function createKeyHandler(lists) {
             (eve.keyCode > 185 && eve.keyCode < 193) ||   // ;=,-./`
             (eve.keyCode > 218 && eve.keyCode < 223))) {  // [\]'
             lists.appendSelection(eve.key);
+            eve.preventDefault();
         }
     }
 
@@ -207,27 +239,40 @@ function createKeyHandler(lists) {
     //This is kinda painful...
     function buildHelp(root) {
         var intro = `
-             Rapidly create and manage lists of things.  It is entirely keyboard
-             driven so that the interface "gets out of your way".<br><br>
+             <b>Rapidly create and manage lists of things.</b> It is entirely
+             keyboard driven so that the interface "gets out of your
+             way".<br><br>
 
-             To get started: Type something and press enter.  Then type
+             <b>Getting started:</b> Type something and press enter.  Then type
              something else and press enter.  You now have two elements in a
              first list.  Press the up or down arrows to select the other
              element (or the list).  Press the right or left arrow to create a
              new list to the right or left.  Add more elements.  "Grab" an
              element with "Ctrl + Shift", then use the arrow keys to move the
-             element around (try up, down, moving it off the current list, etc.
-             Press delete to delete an element.  Those are the basics...<br><br>
+             element around (try up, down, moving it off the current list, etc).
+             Press delete to delete an element.<br><br>
 
-             Otherwise, these are actions that are triggered by key
-             combinations.  Hover over the action to get a description.
+             <b>Here's the complete set of actions</b>.  Hover over the action
+             to get a description.
           `;
+        var caveats = `
+             <br>
+             <b>Some other things to know:</b><br>
+             * Cut / Copy / Paste are local to the application and do not copy
+               to the system clipboard.  This is intentional (at the moment).
+               You can still highlight, right click and Copy to get text on the
+               clipboard.<br>
+             * Cut / Copy / Paste is only for elements.
+          `;
+
         var h = newDiv('help');
         root.appendChild(h);
         var hh = newDiv('help-header', intro);
         h.appendChild(hh);
         var hg = newDiv('help-groups-container');
         h.appendChild(hg);
+        var hh = newDiv('help-header', caveats);
+        h.appendChild(hh);
         var rhr = newDiv(null, '<hr>');
         root.appendChild(rhr);
 
@@ -262,7 +307,8 @@ function createKeyHandler(lists) {
     //This is where we should localStorage override on load
     return {
         handle,
-        buildHelp
+        buildHelp,
+        toggleDebug
     };
 }
 
