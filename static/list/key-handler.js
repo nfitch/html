@@ -107,6 +107,8 @@ function createKeyHandler(lists) {
         fnbindings = {};
         helpObject = new Map();
 
+        //Reminder: Alt Ctrl Meta Shift (in that order)
+
         //Set up all the default bindings.
         bindKeyToAction("Backspace", "Chop");
         bindKeyToAction("ShiftEnter", "AppendNewline");
@@ -120,10 +122,10 @@ function createKeyHandler(lists) {
         bindKeyToAction("CtrlShiftArrowDown", "MoveDown");
         bindKeyToAction("CtrlShiftArrowLeft", "MoveLeft");
         bindKeyToAction("CtrlShiftArrowRight", "MoveRight");
-        bindKeyToAction("CtrlMetaArrowUp", "MoveUp");
-        bindKeyToAction("CtrlMetaArrowDown", "MoveDown");
-        bindKeyToAction("CtrlMetaArrowLeft", "MoveLeft");
-        bindKeyToAction("CtrlMetaArrowRight", "MoveRight");
+        bindKeyToAction("MetaShiftArrowUp", "MoveUp");
+        bindKeyToAction("MetaShiftArrowDown", "MoveDown");
+        bindKeyToAction("MetaShiftArrowLeft", "MoveLeft");
+        bindKeyToAction("MetaShiftArrowRight", "MoveRight");
         bindKeyToAction("Ctrlx", "Cut");
         bindKeyToAction("Ctrlc", "Copy");
         bindKeyToAction("Ctrlv", "Paste");
