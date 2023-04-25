@@ -369,31 +369,67 @@ function createLists(root, storage) {
     }
 
     //Element Cut: Cut the current element.
-    //List Cut: Not implemented.
+    //List Cut: Cut the current list.
     function cut() {
         if (selection && selection.liststype === ELEMENT_TYPE) {
             cutOrCopied = selection.innerText;
+            deleteSelection();
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            cutOrCopied = [];
+            Array.from(selection.children).forEach(function (c) {
+                cutOrCopied.push(c.innerText);
+            });
             deleteSelection();
         }
     }
 
     //Element Copy: Copy the current element.
-    //List Copy: Not implemented.
+    //List Copy: Copy elements in list.
     function copy() {
         if (selection && selection.liststype === ELEMENT_TYPE) {
             cutOrCopied = selection.innerText;
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            cutOrCopied = [];
+            Array.from(selection.children).forEach(function (c) {
+                cutOrCopied.push(c.innerText);
+            });
         }
     }
 
-    //Element Paste: Paste a previously copied element or text from the
-    // clipboard.
-    //List Paste: Not implemented.
+    //Element Paste: Paste a previously copied element.
+    //List Paste: Paste list to the left, or elements after current element.
     function paste() {
-        if (selection && selection.liststype === ELEMENT_TYPE) {
-            if (cutOrCopied !== null) {
+        if (cutOrCopied === null || !selection) {
+            return;
+        }
+        var sType = selection.liststype;
+        var cTypeElement = !Array.isArray(cutOrCopied);
+        var cTypeList = Array.isArray(cutOrCopied);
+        //This is a little weird because where/how we paste depends on
+        // what is copied.  There are 4 cases:
+        // 1. element copied, element selected: paste after current selection, select pasted
+        if (cTypeElement && sType === ELEMENT_TYPE) {
+            addElementAndSelectAfter(selection);
+            appendSelection(cutOrCopied);
+        // 2. element copied, list selected: paste at end of the list, select pasted
+        } else if (cTypeElement && sType === LIST_TYPE) {
+            selection = select(selection.lastChild);
+            addElementAndSelectAfter(selection);
+            appendSelection(cutOrCopied);
+        // 3. list copied, element selected: paste individual elements, select last
+        } else if (cTypeList && sType === ELEMENT_TYPE) {
+            cutOrCopied.forEach(function (s) {
                 addElementAndSelectAfter(selection);
-                appendSelection(cutOrCopied);
-            }
+                appendSelection(s);
+            });
+        // 4. list copied, list selected: paste list to right, select list
+        } else if (cTypeList && sType === LIST_TYPE) {
+            addEmptyListRight(selection.firstChild);
+            cutOrCopied.forEach(function (s) {
+                addElementAndSelectAfter(selection);
+                appendSelection(s);
+            });
+            select(selection.parentElement);
         }
     }
 

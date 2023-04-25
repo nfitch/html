@@ -267,7 +267,6 @@ function createKeyHandler(lists) {
                to the system clipboard.  This is intentional (at the moment).
                You can still highlight, right click and Copy to get text on the
                clipboard.<br>
-             * Cut / Copy / Paste is only for elements.
           `;
 
         var h = newDiv('help');
