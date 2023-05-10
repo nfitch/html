@@ -106,12 +106,16 @@ function createKeyHandler(lists, controls) {
         },
 
         /* ------- Controls Actions ------- */
+        "ToggleHelp": {
+            "group": "Control",
+            "help": "Toggle Help.",
+            "function": controls.toggleHelp
+        },
         "ToggleTypeMode": {
             "group": "Control",
             "help": "Toggle Type Mode on/off.",
             "function": controls.toggleTypeMode
         },
-
     }
 
     function setDefaultBindings() {
@@ -141,6 +145,7 @@ function createKeyHandler(lists, controls) {
         bindKeyToAction("Ctrlx", "Cut");
         bindKeyToAction("Ctrlc", "Copy");
         bindKeyToAction("Ctrlv", "Paste");
+        bindKeyToAction("CtrlShift?", "ToggleHelp");
         bindKeyToAction("Ctrlm", "ToggleTypeMode");
     }
 
