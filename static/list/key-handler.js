@@ -11,17 +11,21 @@
   We have key groupings only so that we can automagically collect them into...
   groups...
  */
-function createKeyHandler(lists) {
+function createKeyHandler(lists, controls) {
     var DEBUG = false;
     var fnbindings = {};
     //Per docs, Maps are ordered by insertion order.  That's what we want here.
     var helpObject = new Map();
+    var typeMode = true;
 
     function toggleDebug() {
         DEBUG = !DEBUG;
     }
 
     const actions = {
+
+        /* ------- List Actions ------- */
+
         "Chop": {
             "group": "Text Editing",
             "help": "Remove the last character from selected element.",
@@ -99,7 +103,15 @@ function createKeyHandler(lists) {
             "help": "Paste.  If you had previously cut or copied an element, " +
                 "a duplicate will be created after the selected element.",
             "function": lists.paste
-        }
+        },
+
+        /* ------- Controls Actions ------- */
+        "ToggleTypeMode": {
+            "group": "Control",
+            "help": "Toggle Type Mode on/off.",
+            "function": controls.toggleTypeMode
+        },
+
     }
 
     function setDefaultBindings() {
@@ -129,6 +141,7 @@ function createKeyHandler(lists) {
         bindKeyToAction("Ctrlx", "Cut");
         bindKeyToAction("Ctrlc", "Copy");
         bindKeyToAction("Ctrlv", "Paste");
+        bindKeyToAction("Ctrlm", "ToggleTypeMode");
     }
 
     //key is a string built in the following way:
@@ -212,7 +225,7 @@ function createKeyHandler(lists) {
             fnbindings[k]();
             lists.trySave();
             eve.preventDefault();
-        } else if ((mods === "" || mods === "Shift") && (
+        } else if (typeMode && (mods === "" || mods === "Shift") && (
             (eve.keyCode > 47 && eve.keyCode < 58) ||     // numbers
             eve.keyCode == 32 ||                          // spacebar
             eve.keyCode == 61 ||                          // =
@@ -308,11 +321,21 @@ function createKeyHandler(lists) {
         });
     }
 
+    function typeModeOn() {
+        typeMode = true;
+    }
+
+    function typeModeOff() {
+        typeMode = false;
+    }
+
     setDefaultBindings();
     //This is where we should localStorage override on load
     return {
         handle,
         buildHelp,
+        typeModeOn,
+        typeModeOff,
         toggleDebug
     };
 }

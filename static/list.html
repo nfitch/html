@@ -18,7 +18,6 @@
     - CSV save/load (probably introduce an external dependency :sad-panda:)
     - Named Views (<2 clicks New/Save As/Load/Delete)
     - "Easy" Saving / Loading somewhere other than Local Storage
-    - Type mode on/off switch
     - Slam cursor & selection to extremities w/single key combinations
     - Abstract the DOM interactions (super intertwined makes some things harder)
     - List headers (type when list is highlighted)
@@ -45,7 +44,13 @@
     <script type="module" src="./list/key-handler.js"></script>
     <script type="text/javascript">
       const DEFAULT_FILENAME = "list.json";
+
       var lists;
+      var keyHandler;
+
+      //Storage
+      var storage = localStorage;  //We'll abstract this away at some point.
+      var TYPE_MODE_PREF_KEY = "preference:typeMode";
 
       function init() {
           //Disable the form
@@ -57,16 +62,25 @@
           //Load the lists app at the list-outer element.
           lists = createLists(
               document.getElementById("list-outer"),
-              localStorage
+              storage
           );
-          keyHandler = createKeyHandler(lists);
 
+          //Init Key Handling
+          var controls = {
+              "toggleTypeMode": toggleTypeMode
+          }
+          keyHandler = createKeyHandler(lists,
+                                        controls);
           document.addEventListener('keydown', keyHandler.handle);
           lists.init();
 
+          //Init Help
           var helpContainer = document.getElementById("help-container");
           toggleHelp();
           keyHandler.buildHelp(helpContainer);
+
+          //Init other preferences
+          loadTypeMode();
       }
 
       function toggleHelp() {
@@ -115,6 +129,34 @@
           }
           fr.readAsText(file);
       }
+
+      function loadTypeMode() {
+          var typeMode;
+          if (!storage.getItem(TYPE_MODE_PREF_KEY)) {
+              typeMode = true;
+          } else {
+              var tm = storage.getItem(TYPE_MODE_PREF_KEY);
+              typeMode = (tm === "true") ? true : false;
+          }
+          document.getElementById("type-mode").checked = typeMode;
+          updateTypeMode();
+      }
+
+      function updateTypeMode() {
+          if (document.getElementById("type-mode").checked) {
+              keyHandler.typeModeOn();
+              storage.setItem(TYPE_MODE_PREF_KEY, "true");
+          } else {
+              keyHandler.typeModeOff();
+              storage.setItem(TYPE_MODE_PREF_KEY, "false");
+          }
+      }
+
+      function toggleTypeMode() {
+          document.getElementById("type-mode").checked =
+              !document.getElementById("type-mode").checked;
+          updateTypeMode();
+      }
     </script>
   </head>
   <body onload="init()">
@@ -133,6 +175,10 @@
             <input type="file" id="merge-file-select" accept="text/json,.json"
                    onchange="mergeJSON()" style="display:none;">
           </td><td align="right">
+            Type Mode <label class="switch">
+              <input id="type-mode" type="checkbox" onChange="updateTypeMode()">
+              <span class="slider round"></span>
+            </label>
             <input type="button" id="help-button" name="Help"
                    value="Show Help" onClick="toggleHelp()">
         </td></tr>
