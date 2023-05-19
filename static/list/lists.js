@@ -31,6 +31,7 @@ function createLists(root, storage) {
 
     //---- Clear, reset, init minimum ----
     function clearData() {
+        // DOM (!)
         root.replaceChildren();
     }
 
@@ -40,6 +41,7 @@ function createLists(root, storage) {
     }
 
     function initMinimum() {
+        // DOM (!)
         var elementDiv = newElementDiv();
         selection = select(elementDiv);
         var listDiv = newListDiv();
@@ -49,6 +51,7 @@ function createLists(root, storage) {
 
     //---- List Div Manipulations ----
     function newListDiv() {
+        // DOM (!)
         var div = document.createElement('div');
         div.classList.add('list');
         div.liststype = LIST_TYPE;
@@ -56,6 +59,7 @@ function createLists(root, storage) {
     }
 
     function addEmptyListRight(e) {
+        // DOM (!)
         var elementDiv = newElementDiv();
         var listDiv = newListDiv();
         listDiv.appendChild(elementDiv);
@@ -65,6 +69,7 @@ function createLists(root, storage) {
     }
 
     function addEmptyListLeft(e) {
+        // DOM (!)
         var elementDiv = newElementDiv();
         var listDiv = newListDiv();
         listDiv.appendChild(elementDiv);
@@ -74,6 +79,7 @@ function createLists(root, storage) {
     }
 
     function addListRight(selection) {
+        // DOM (!)
         var listDiv = newListDiv();
         var parentElement = selection.parentElement;
         selection.parentElement.after(listDiv);
@@ -83,6 +89,7 @@ function createLists(root, storage) {
     }
 
     function addListLeft(selection) {
+        // DOM (!)
         var listDiv = newListDiv();
         var parentElement = selection.parentElement;
         selection.parentElement.before(listDiv);
@@ -93,6 +100,7 @@ function createLists(root, storage) {
 
     //---- Element Div Manipulations ----
     function newElementDiv() {
+        // DOM (!)
         var div = document.createElement('div');
         div.classList.add('list-element');
         div.liststype = ELEMENT_TYPE;
@@ -100,12 +108,14 @@ function createLists(root, storage) {
     }
 
     function addElementAndSelectAfter(e) {
+        // DOM (!)
         var div = newElementDiv();
         e.after(div);
         selection = select(div);
     }
 
     function addElementAndSelectBefore(e) {
+        // DOM (!)
         var div = newElementDiv();
         e.before(div);
         selection = select(div);
@@ -113,6 +123,7 @@ function createLists(root, storage) {
 
     //Append text to the selection
     function appendSelection(s) {
+        // DOM (!)
         selection.innerText += s;
     }
 
@@ -129,6 +140,7 @@ function createLists(root, storage) {
 
     //TODO: plumb this up/through?
     function deselectAllText() {
+        // DOM (!)
         if (window.getSelection) {
             window.getSelection().removeAllRanges();
         }
@@ -141,11 +153,18 @@ function createLists(root, storage) {
 
     //Chop: remove last character from selected element
     function chop() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             //Is a div, has text, take off the last character
             if (selection.innerText !== "") {
                 selection.innerText = selection.innerText.slice(0, -1);
-            } else {
+            }
+            /* TODO: Decide if I like the removal on backspace...
+               but when I was using it in the real world, I held down backspace
+               and that caused me to delete more from the next elements text
+               than I was anticipating... seems more dangrous than it was
+               worth.  Will remove eventually depending on real-world usage.
+            else {
                 //Remove until there's only a blank element
                 if (selection.previousElementSibling !== null) {
                     var toSelect = selection.previousElementSibling;
@@ -156,7 +175,7 @@ function createLists(root, storage) {
                     selection.remove();
                     selection = select(toSelect);
                 }
-            }
+            }*/
         }
     }
 
@@ -170,6 +189,7 @@ function createLists(root, storage) {
     //Element Delete: delete the current element
     //List Delete: delete the current list and all elements
     function deleteSelection() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             //Find the new thing to select... try up, down, left and right
             var pe = selection.parentElement;
@@ -227,6 +247,7 @@ function createLists(root, storage) {
     // above, or select the list if falling off the top of the list
     //List SelectUp: select last element
     function selectUp() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             if (selection.previousElementSibling) {
                 selection = select(selection.previousElementSibling);
@@ -247,6 +268,7 @@ function createLists(root, storage) {
     // below, or select the list if falling off the bottom of the list
     //List Down: select first element
     function selectDown() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             if (selection.nextElementSibling) {
                 selection = select(selection.nextElementSibling);
@@ -266,6 +288,7 @@ function createLists(root, storage) {
     // new list with an empty element to the right
     //List SelectLeft: select list to left
     function selectLeft() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             if (selection.parentElement.previousSibling) {
                 var ele = findClosest(
@@ -286,6 +309,7 @@ function createLists(root, storage) {
     // a new list with an empty element to the right
     //List SelectRight: select list to right
     function selectRight() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             if (selection.parentElement.nextSibling) {
                 var ele = findClosest(
@@ -304,6 +328,7 @@ function createLists(root, storage) {
 
     //Element MoveUp: Move selection up
     function moveUp() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             deselectAllText();
             if (selection.previousElementSibling) {
@@ -314,6 +339,7 @@ function createLists(root, storage) {
 
     //Element MoveDown: Move selection down
     function moveDown() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             deselectAllText();
             if (selection.nextElementSibling) {
@@ -326,6 +352,7 @@ function createLists(root, storage) {
     // list if necessary.
     //List MoveLeft: move list to left
     function moveLeft() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             deselectAllText();
             if (selection.parentElement.previousSibling) {
@@ -349,6 +376,7 @@ function createLists(root, storage) {
     // new list if necessary.
     //List MoveRight: move list to right
     function moveRight() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             deselectAllText();
             if (selection.parentElement.nextSibling) {
@@ -371,6 +399,7 @@ function createLists(root, storage) {
     //Element Cut: Cut the current element.
     //List Cut: Cut the current list.
     function cut() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             cutOrCopied = selection.innerText;
             deleteSelection();
@@ -386,6 +415,7 @@ function createLists(root, storage) {
     //Element Copy: Copy the current element.
     //List Copy: Copy elements in list.
     function copy() {
+        // DOM (!)
         if (selection && selection.liststype === ELEMENT_TYPE) {
             cutOrCopied = selection.innerText;
         } else if (selection && selection.liststype === LIST_TYPE) {
@@ -399,6 +429,7 @@ function createLists(root, storage) {
     //Element Paste: Paste a previously copied element.
     //List Paste: Paste list to the left, or elements after current element.
     function paste() {
+        // DOM (!)
         if (cutOrCopied === null || !selection) {
             return;
         }
@@ -435,6 +466,7 @@ function createLists(root, storage) {
 
     //---- Finding and moving ----
     function findClosest(ele, list) {
+        // DOM (!)
         var rect = ele.getBoundingClientRect();
         var y = rect.y;
         var ch = list.firstChild;
@@ -447,6 +479,7 @@ function createLists(root, storage) {
 
     //Sometimes we move it before, other times after...
     function moveBeforeOrAfter(ele, selection) {
+        // DOM (!)
         var ey = ele.getBoundingClientRect().y;
         var sy = selection.getBoundingClientRect().y;
         if (sy <= ey) {
@@ -458,6 +491,7 @@ function createLists(root, storage) {
 
     //---- Selecting functions w/styling ----
     function styleSelect(div) {
+        // DOM (!)
         div.style.borderWidth = 2;
         div.style.margin = 1;
         div.style.borderColor = '#000080';
@@ -465,6 +499,7 @@ function createLists(root, storage) {
     }
 
     function styleUnselect(div) {
+        // DOM (!)
         div.style.borderWidth = 1;
         div.style.margin = 2;
         div.style.borderColor = '#BEBEBE';
@@ -472,6 +507,7 @@ function createLists(root, storage) {
     }
 
     function select(e) {
+        // DOM (!)
         var oldSelection = selection;
         selection = e;
         styleSelect(selection);
@@ -484,6 +520,7 @@ function createLists(root, storage) {
     }
 
     function tryCollapse(e) {
+        // DOM (!)
         if (!e) {
             return true;
         }
@@ -555,6 +592,7 @@ function createLists(root, storage) {
     }
 
     function loadString(dataString, clear) {
+        // DOM (!)
         if (DEBUG_STORAGE) { console.log("dataString", dataString); }
         var data = parser.parse(dataString);
         if (DEBUG_STORAGE) { console.log("Parsed data", data); }

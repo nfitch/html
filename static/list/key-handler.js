@@ -25,7 +25,6 @@ function createKeyHandler(lists, controls) {
     const actions = {
 
         /* ------- List Actions ------- */
-
         "Chop": {
             "group": "Text Editing",
             "help": "Remove the last character from selected element.",
@@ -129,6 +128,7 @@ function createKeyHandler(lists, controls) {
         bindKeyToAction("Backspace", "Chop");
         bindKeyToAction("ShiftEnter", "AppendNewline");
         bindKeyToAction("Delete", "Delete");
+        bindKeyToAction("ShiftBackspace", "Delete");
         bindKeyToAction("Enter", "ForceAddEmptyElement");
         bindKeyToAction("ArrowUp", "SelectUp");
         bindKeyToAction("ArrowDown", "SelectDown");
@@ -225,7 +225,10 @@ function createKeyHandler(lists, controls) {
     function handle(eve) {
         var mods = modsString(eve);
         var k = mods + eve.key;
-        if (DEBUG) { console.log("key handler <<" + k + ">>", fnbindings[k]); }
+        if (DEBUG) {
+            console.log("key handler <<" + k + ">>",
+                        fnbindings[k], eve);
+        }
         if (fnbindings[k]) {
             fnbindings[k]();
             lists.trySave();
@@ -233,6 +236,7 @@ function createKeyHandler(lists, controls) {
         } else if (typeMode && (mods === "" || mods === "Shift") && (
             (eve.keyCode > 47 && eve.keyCode < 58) ||     // numbers
             eve.keyCode == 32 ||                          // spacebar
+            eve.keyCode == 59 ||                          // :;
             eve.keyCode == 61 ||                          // =
             eve.keyCode == 173 ||                         // -
             (eve.keyCode > 64 && eve.keyCode < 91) ||     // letters

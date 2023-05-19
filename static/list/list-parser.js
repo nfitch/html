@@ -104,6 +104,7 @@ function createListParser(root) {
 
     //Stringify to the latest structure.
     function stringify() {
+        //DOM (!)
         //TODO: Extract all the other fields from the dom overlay
         var data = {
             version: 1,
