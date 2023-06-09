@@ -516,6 +516,13 @@ function createLists(root, storage) {
             tryCollapse(oldSelection.parentElement);
             tryCollapse(oldSelection);
         }
+        // DOM (!)
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            selection.parentElement.scrollIntoView(false);
+            selection.scrollIntoView(false);
+        } else if (selection && selection.liststype === LIST_TYPE) {
+            selection.scrollIntoView();
+        }
         return selection;
     }
 
