@@ -43,10 +43,10 @@ function createLists(root, storage) {
     function initMinimum() {
         // DOM (!)
         var elementDiv = newElementDiv();
-        selection = select(elementDiv);
         var listDiv = newListDiv();
         listDiv.appendChild(elementDiv)
         root.appendChild(listDiv);
+        selection = select(elementDiv);
     }
 
     //---- List Div Manipulations ----
