@@ -66,27 +66,63 @@
       var orgDataPath = "./org-data/data.csv";
       var orgJoinPath = "./org-data/join.csv";
 
+      //D3 Caches...
+      orgDataPath = orgDataPath + '?' + Math.floor(Math.random() * 1000);
+      orgJoinPath = orgJoinPath + '?' + Math.floor(Math.random() * 1000);
+
       //Holds the org and the (for now, single, org joins)
       var org;
       var joins;
 
+      function transformRow(row) {
+          //id,name,manager_id,title,team,location,start_date
+          var id = row["id"];
+
+          if (id === undefined) {
+              console.error("id is undefined for the row", row);
+              return;
+          }
+
+          //Build person
+          var person = index[id];
+          if (!person) {
+              person = {};
+              person.id = id;
+              person.children = [];
+              index[id] = person;
+          }
+          person.name = row["name"];
+          person.managerId = row["manager_id"];
+          person.title = row["title"];
+          person.orgName = row["team"];
+          person.startDate = row["start_date"]; // MM/DD/YYYY
+          person.location = row["location"];
+
+          person.raw = row;
+          return person;
+      }
+
       /* ==== Build the org from CSV rows ==== */
       function orgFromRows(rows) {
+          console.log("Building tree from rows", rows);
           for (var i = 0; i < rows.length; ++i) {
               var row = rows[i];
 
-              //Build person
-              var person = index[row.id];
-              if (!person) {
-                  person = {};
-                  person.id = row.id;
-                  person.children = [];
-                  index[person.id] = person;
+              var person;
+              // Leaving this in in case other people pick up the code so
+              // there's a clean hook for adding a csv transform.
+              if (orgDataPath.includes("-teams-")) {
+                  //person = transformTeams(row, index);
+              } else {
+                  person = transformRow(row, index);
               }
-              person.name = row.name;
-              person.managerId = row.manager_id;
-              person.title = row.title;
-              person.raw = row;
+
+              //Calculate Tenure
+              var now = new Date();
+              var startDate = new Date(person.startDate);
+              person.tenure = (
+                  (now - startDate) / (1000 * 60 * 60 * 24 * 365)
+              ).toFixed(2);
 
               //Add to the manager
               var manager = index[person.managerId];
@@ -99,7 +135,47 @@
               manager.children.push(person);
           }
 
-          org = index[""];
+          console.log("Done ingesting rows, going to find top keys", index);
+
+          // Set top and Find "floating" orgs...
+          var topKey;
+          if (index[""]) {
+              topKey = "";
+          } else if (index["-"]) {
+              topKey = "-";
+          }
+          org = index[topKey];
+          var tops = [topKey];
+          for (key in index) {
+              var current = key;
+              while(index.hasOwnProperty(index[current].managerId) &&
+                    current !== topKey) {
+                  current = index[current].managerId;
+              }
+              if (!tops.includes(current)) {
+                  tops.push(current);
+              }
+          }
+
+          console.log("Done finding tops", tops);
+
+          if (tops.length !== 1) {
+              console.error("There are some floating orgs... " +
+                            "hooking them up manually...", tops);
+              for (key in tops) {
+                  if (tops[key] !== topKey) {
+                      var unknown = index[tops[key]];
+                      unknown.name = tops[key];
+                      unknown.managerId = "";
+                      unknown.title = "<unknown>";
+                      unknown.startDate = "";
+                      unknown.location = "??";
+                      org.children.push(unknown);
+                  }
+              }
+          }
+
+          console.log("Calling back to init now that we have the org", org);
 
           //Call back to init now that we have data.
           init();
@@ -235,7 +311,9 @@
               .attr("dx", 5.5)
               .text(function(d) {
                   return d.data.name +
-                      (d.data.title ? ', ' + d.data.title : "");
+                      (d.data.title ? ', ' + d.data.title : "") +
+                      (d.data.tenure ? ', ' + d.data.tenure + 'y' : "") +
+                      (d.data.location ? ', ' + d.data.location : "");
               });
 
           // Org Name
@@ -477,17 +555,24 @@
       //Called multiple times as data is loaded.
       function init() {
           if (!org) {
+              console.log("Loading CSV...");
               d3.csv(orgDataPath, orgFromRows);
           } else if (!joins) {
+              console.log("Joining Data...");
               d3.csv(orgJoinPath, orgJoinData);
           } else {
               //Give the Top node a name so it isn't blank.
               org.name = "The Org";
+              console.log("Adding Org Stats...");
               addOrgStats(org);
+              console.log("Sorting...");
               sortChildren(org);
-              console.log(org);
+              console.log("org", org);
+              console.log("Initing D3...");
               initD3();
+              console.log("Collapsing...");
               collapseToLevelD3(2);
+              console.log("Initing Autocomplete...");
               initAutocomplete();
           }
       }
