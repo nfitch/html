@@ -1,0 +1,165 @@
+<html>
+<head>
+<title>Memodiff</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<meta charset="UTF-8">
+<style type="text/css">
+textarea {
+   width: 100%;
+   height: 100%;
+   resize: none;
+}
+* {
+   font-size: 100%;
+   font-family: Courier New;
+}
+</style>
+<script type="text/javascript">
+  //Can I get some global variables, please and thanks you?!
+  var text = '';
+  var parsed; //Intentionally undefined
+
+  function ge(s) {
+      return document.getElementById(s);
+  }
+
+  function replaceBody(s) {
+      ge("body").innerHTML = s;
+  }
+
+  function instructions() {
+      ge("text").value = '\
+# This is the Memo-diff.  It helps you memorize things.  Paste some text\n\
+# in this text area and press Next =>.  Then try to retype what is in the\n\
+# box.  Line by line it will show you the differences between what you\n\
+# pasted and what you typed.  Have fun memorizing things!\n\
+Hello World!\n\
+Goodbye Moon!\n\
+See the stars,\n\
+Flying balloons.\n\
+';
+  }
+
+  function input() {
+      replaceBody('\
+<table width="100%" height="100%" border="0">\
+  <tr><td align="left" height="1%">\
+    <input type="button" value="Instructions" onclick="instructions()"></input>\
+    </td>\
+    <td align="right"><input type="button" value="Next =>" onclick="memodiff()"></td>\
+  </tr>\
+  <tr><td colspan="2" height="1%"><hr></td></tr>\
+  <tr><td colspan="2" valign="top" width="100%" height="100%">\
+    <textarea id="text">' + text + '</textarea>\
+  </td></tr>\
+</table>\
+  ');
+  }
+
+  function parse(s) {
+      var ret = {
+          lines: []
+      };
+      lines = ge('text').value.split('\n');
+      for (var i in lines) {
+          var line = lines[i];
+          if (line.substring(0, 1) === '#') {
+              continue;
+          }
+          ret.lines.push(line);
+      }
+      //console.log("Parsed Lines", ret);
+      return (ret);
+  }
+
+  // Builds a diff object of two strings.  Ends up being an
+  // array of structs:
+  // [ { match: [true|false], right: [text], left: [text] }, ... ]
+  function diff(r, l) {
+      //If they are undefined, just make them a string
+      r = r ? r : "";
+      l = l ? l : "";
+      //Just a word by word diff (by position) for the moment.  Will
+      // make it smarter in a future iteration...
+      var DEL = " ";
+      var ret = [];
+      var ra = r.split(DEL);
+      var la = l.split(DEL);
+      var ri = 0;
+      var li = 0;
+      while (ri < ra.length || li < la.length) {
+          var s = {};
+          s.match = (ra[ri] === la[li]);
+          s.right = ra[ri] ? ra[ri] : "";
+          s.left = la[li] ? la[li] : "";
+          ret.push(s);
+          ++ri;
+          ++li;
+      }
+      return ret;
+  }
+
+  //For now, just does the simple strikethrough thing.
+  function formatLineDiff(diff) {
+      var ret = '';
+      for (var i = 0; i < diff.length; ++i) {
+          if (diff[i].match) {
+              ret += '<font color=green>' + diff[i].left + '</font>';
+          } else {
+              ret += '<s>' + diff[i].left + '</s>' +
+                  '<font color=red>' + diff[i].right + '</font>';
+          }
+          if (i != diff.length - 1) {
+              ret += ' ';
+          }
+      }
+      ret += "<br>";
+      return ret;
+  }
+
+  function leafinput() {
+      var diffpane = ge("diffpane");
+      var lines = ge("leaf").value.split("\n");
+      //Ok, so now we have parsed and leaf, now do a line by line diff
+      // for all but the last line...
+      var html = '';
+      for (var i = 0; i < lines.length - 1; ++i) {
+          var ldiff = diff(parsed.lines[i], lines[i]);
+          html += formatLineDiff(ldiff);
+      }
+      diffpane.innerHTML = html;
+  }
+
+  function memodiff() {
+      text = ge("text").value;
+      parsed = parse(text);
+      var html = '\
+<table width="100%" height="100%" border="0">\
+    <tr><td align="left" height="1%" colspan="1">\
+            <input type="button" value="<= Back" onclick="input()"></input>\
+        </td>\
+    </tr>\
+    <tr><td colspan="3" height="1%"><hr></td></tr>\
+    <tr>\
+       <!-- Write Textarea -->\
+       <td valign="top" width="50%">\
+          <textarea id="leaf" oninput="leafinput();"></textarea>\
+       </td>\
+       <!-- Vertical Divider -->\
+       <td width="1px" bgcolor="black"></td>\
+       <!-- Diff Pane -->\
+       <td valign="top" width="50%">\
+          <div id="diffpane">\
+       </td>\
+     </tr>\
+</table>\
+';
+      replaceBody(html);
+  }
+</script>
+</head>
+<!-- <body onload="input(); instructions(); memodiff();"> -->
+<body onload="input();">
+<div id="body"></div>
+</body>
+</html>
