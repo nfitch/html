@@ -35,7 +35,11 @@
 # It also splits left and right panes if, within two "---"s you separate \n\
 # with "|||". \n\
 # \n\
+# It will also put a title up top if your first line of slides is some text \n\
+# between = signs. \n\
+# \n\
 # Heres an example: \n\
+= Across the Universe = \n\
 D Bm F#m \n\
 Em7 A7 \n\
 D Bm F#m \n\
@@ -67,6 +71,7 @@ Inciting and inviting me \n\
 Limitless undying love which shines around me like a million suns \n\
 It calls me on and on across the universe \n\
 --- \n\
+= I Can See Clearly Now = \n\
 D G D \n\
 D G A \n\
 D G D \n\
@@ -91,6 +96,7 @@ Here is that rainbow I\'ve been praying for \n\
 Look all around, there\'s nothing but blue skies \n\
 Look straight ahead, there\'s nothing but blue skies \n\
 --- \n\
+= Love Me Do = \n\
 G C \n\
 G C \n\
 G C \n\
@@ -113,6 +119,7 @@ Sombody new \n\
 Someone to love \n\
 Someone like you \n\
 --- \n\
+= Paperback Writer = \n\
 G \n\
 G \n\
 G \n\
@@ -149,6 +156,7 @@ But I need a break \n\
 And I want to be a paperbak writer \n\
 Paperback writer \n\
 --- \n\
+= Yellow Submarine = \n\
 (G) D C G \n\
 Em Am C D7 \n\
 G D C G \n\
@@ -203,6 +211,7 @@ In our Yellow Submarine \n\
           var tdl = ge('body-text-td-left');
           var width = tdl.clientWidth;
           var height = tdl.clientHeight;
+          ge('body-slide-title').innerHTML = slide.title;
           ge('body-text-left').innerHTML = slide.left;
           ge('body-text-right').innerHTML = (slide.right ? slide.right : '');
           fitElement(ge('body-text-left'), width, height);
@@ -257,6 +266,14 @@ In our Yellow Submarine \n\
           for (var i = 0; i < slides.length; ++i) {
               var sds = slides[i].split(/\|\|\|/);
               slides[i] = {};
+              // Pull out the title
+              slides[i].title = "(" + (i + 1) + " of " + slides.length + ")";
+              var found  = sds[0].match(/=(.*)=/);
+              if (found) {
+                  console.log(found);
+                  slides[i].title = found[1] + " " + slides[i].title;
+                  sds[0] = sds[0].replace(/=(.*)=/, "");
+              }
               slides[i].left = slideToHTML(sds[0]);
               slides[i].right = slideToHTML(sds[1]);
           }
@@ -280,14 +297,20 @@ In our Yellow Submarine \n\
           // Template for the slides
           replaceBody('\
 <table width="100%" height="100%" border="0">\
-    <tr><td align="left" height="1%">\
+    <tr><td colspan=2>\
+      <table width="100%" height="100%" border="0"><tr>\
+        <td align="left" height="1%" width="15%">\
            <input type="button" value="Back" onclick="input()"></input>\
         </td>\
-        <td align="right">\
+        <td align="center" width="70%">\
+           <span id="body-slide-title">Title</span>\
+        </td>\
+        <td align="right" width="15%">\
            <input type="button" value="<= Prev" onclick="prevSlide()"></input>\
            <input type="button" value="Next =>" onclick="nextSlide()"></input>\
-        </td>\
-    </tr>\
+        </td></td>\
+      </table>\
+    </td></tr>\
     <tr><td colspan="2" height="1%"><hr></td></tr>\
     <tr height="100%">\
       <td valign="top" width=50% id="body-text-td-left">\
