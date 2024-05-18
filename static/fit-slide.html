@@ -5,9 +5,14 @@
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <style>
       textarea {
-      width: 100%;
-      height: 100%;
+        width: 100%;
+        height: 100%;
       }
+
+      * {
+        font-family: "Courier New", Courier, monospace;
+      }
+
     </style>
     <script type="text/javascript">
       var gSavedText = '';
@@ -233,6 +238,8 @@ In our Yellow Submarine \n\
           // don't want that.
           s = s.replace(/\n/g, '</nobr><br><nobr>');
           s = '<nobr>' + s + '</nobr>';
+          // Replace all the spaces with &nbsp;
+          s = s.replace(/ /g, '&nbsp;');
           return s;
       }
 
