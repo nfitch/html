@@ -8,6 +8,10 @@
     <title>Org Chart</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <style>
+      * {
+        font: 12px sans-serif;
+      }
+
       .node rect {
         cursor: pointer;
         fill: #fff;
@@ -29,6 +33,7 @@
     </style>
     <link rel="stylesheet" href="./org/auto-complete.css">
     <script src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- <script src="./org/d3.v4.min.js"></script> -->
     <script src="./org/auto-complete.min.js"></script>
     <script type="text/javascript">
       /***********************************
@@ -37,12 +42,10 @@
        *    name: name
        *    manager_id: unique id for the manager Person
        *    title: job title
-       *
-       * Join CSV input:
-       *    id: [joins on this key]
-       *    [fields]: Will slap any fields, by name, into the Person.
-       *              Note: This will *override* any properties in the original
-       *                    data.
+       *    team: team
+       *    location: location
+       *    employment: employent type (fte, contract, etc)
+       *    start_date: date they started
        *
        * Person fields (after transform):
        *    id: unique id for the person
@@ -63,19 +66,19 @@
 
       //Ya... globals... sigh...
       var index = {};
-      var orgDataPath = "./org-data/data.csv";
-      var orgJoinPath = "./org-data/join.csv";
+      var urlParams;
+      var orgDataObj;
 
-      //D3 Caches...
-      orgDataPath = orgDataPath + '?' + Math.floor(Math.random() * 1000);
-      orgJoinPath = orgJoinPath + '?' + Math.floor(Math.random() * 1000);
+      var orgData = {
+          "2021-10-16": {"path": "./org-data/data-2021-10-16.csv", "type": "default"},
+          "2021-11-15": {"path": "./org-data/data-2021-11-15.csv", "type": "default"},
+      };
 
-      //Holds the org and the (for now, single, org joins)
+      //Holds the org
       var org;
-      var joins;
 
-      function transformRow(row) {
-          //id,name,manager_id,title,team,location,start_date
+      function transformRowDefault(row) {
+          //id,name,manager_id,title,team,location,employment,start_date
           var id = row["id"];
 
           if (id === undefined) {
@@ -97,6 +100,11 @@
           person.orgName = row["team"];
           person.startDate = row["start_date"]; // MM/DD/YYYY
           person.location = row["location"];
+          person.employment = row["employment"];
+
+          if (person.employment === "contract") {
+              person.name += " [C]";
+          }
 
           person.raw = row;
           return person;
@@ -111,10 +119,10 @@
               var person;
               // Leaving this in in case other people pick up the code so
               // there's a clean hook for adding a csv transform.
-              if (orgDataPath.includes("-teams-")) {
-                  //person = transformTeams(row, index);
+              if (orgDataObj.type === "noexist") {
+                  //person = transformNoExist(row, index);
               } else {
-                  person = transformRow(row, index);
+                  person = transformRowDefault(row, index);
               }
 
               //Calculate Tenure
@@ -145,7 +153,7 @@
               topKey = "-";
           }
           org = index[topKey];
-          var tops = [topKey];
+          var tops = [];
           for (key in index) {
               var current = key;
               while(index.hasOwnProperty(index[current].managerId) &&
@@ -159,7 +167,7 @@
 
           console.log("Done finding tops", tops);
 
-          if (tops.length !== 1) {
+          if (tops.length !== 1 && tops[0] !== topKey) {
               console.error("There are some floating orgs... " +
                             "hooking them up manually...", tops);
               for (key in tops) {
@@ -188,28 +196,6 @@
                   .replace('_', '');
           });
       };
-
-      /* ==== Join data into org structure ==== */
-      function orgJoinData(rows) {
-          joins = rows;
-          for (var i = 0; i < joins.length; ++i) {
-              var join = joins[i];
-
-              var node = index[join.id];
-              if (!node) {
-                  console.error('Attempted join but couldnt find person', join);
-                  continue;
-              }
-
-              for (key in join) {
-                  var newKey = toCamel(key);
-                  node[newKey] = join[key];
-              }
-          }
-
-          //Call back to init now that we have data.
-          init();
-      }
 
       /* ==== Add Stats to org ==== */
       function addOrgStats(org) {
@@ -551,15 +537,136 @@
           updateD3(root);
       }
 
+      /* ==== Text ==== */
+      function printTextChildren(level, node) {
+          var indent = "";
+          for (var i = 0; i < level; ++i) {
+              indent += "&nbsp;&nbsp;&nbsp;";
+          }
+          document.body.innerHTML += indent +
+              "(" + node.numReports + ") " +
+              node.name + ", " +
+              node.title + ", " +
+              node.orgName +", " +
+              node.location + ", " +
+              node.tenure + "y" +
+              "<br>";
+          for (var i = 0; i < node.children.length; ++i) {
+              printTextChildren(level + 1, node.children[i]);
+          }
+      }
+
+      /* ==== Augmented CSV ==== */
+      //Preferred name,Title,Teams,Department,Work email,Location,Employment,Start date,Manager email
+      function printAugmentedCSV(org) {
+          //We assume the top is "The Org", so skip that and print the
+          // header instead.
+          document.body.innerHTML += "Preferred name,Title,Teams,Department," +
+              "Work email,Location,Employment,Start date,Manager email," + //After augmented
+              "Directs,Reports,Tenure,Manager 0,Manager 1,Manager 2,Manager 3,Manager 4," +
+              "Manager 5,Manager 6<br>";
+          for (var i = 0; i < org.children.length; ++i) {
+              printAugmentedCSVNode(org.children[i]);
+          }
+      }
+
+      function csvf(f) {
+          if (typeof f !== "string" || f.indexOf(",") === -1) {
+              return f;
+          }
+          return "\"" + f + "\"";
+      }
+
+      function printAugmentedCSVNode(node) {
+          var fields = ["name", "title", "orgName", "department",
+                        "email", "location", "employment", "startDate", "managerEmail",
+                        "numDirects", "numReports", "tenure"];
+          var rowt = "";
+          for (var i = 0; i < fields.length; ++i) {
+              rowt += csvf(node[fields[i]]) + ",";
+          }
+
+          //Manager Hierarchy
+          var manager = index[node.managerId];
+          var managert = "";
+          while(manager && manager.name != "The Org") {
+              managert = manager.name + "," + managert;
+              manager = index[manager.managerId];;
+          }
+          rowt += managert;
+          document.body.innerHTML += rowt + "<br>";
+
+          //Now the Children...
+          for (var i = 0; i < node.children.length; ++i) {
+              printAugmentedCSVNode(node.children[i]);
+          }
+      }
+
+      /* ==== Date Selector ===== */
+      function findAndPropagateDataFromDate(orgData, dataDate) {
+          //Extract all the dates
+          var dates = [];
+          for (key in orgData) {
+              if (orgData.hasOwnProperty(key)) {
+                  dates.push(key);
+              }
+          }
+          dates.sort(function (a, b) { return b > a; });
+
+          // See if there's a requested data date besides the latest...
+          if (!orgData[dataDate]) {
+              if (dataDate) {
+                  console.log(dataDate + " not found.  Reverting to latest.");
+              }
+              dataDate = dates[0];
+          }
+          //Now Build the Drop Down and other HTML updates
+          var dataSelect = document.getElementById("dataSelect");
+          //First, clear out all the options
+          for (var i = dataSelect.options.length - 1; i >= 0; --i) {
+              dataSelect.remove(i);
+          }
+          for (var i = 0; i < dates.length; ++i) {
+              var option = document.createElement("option");
+              option.text = dates[i];
+              dataSelect.add(option);
+          }
+          updateDataSelection(dataDate);
+          return dataDate;
+      }
+
+      function updateDataSelection(dataDate) {
+          document.getElementById("dataSelect").value = dataDate;
+          document.getElementById("textLink").href = "?mode=text&data=" + dataDate;
+          document.getElementById("csvLink").href = "?mode=csv&data=" + dataDate;
+      }
+
+      function newDataSelected() {
+          var selectedData = document.getElementById("dataSelect").value;
+          //This is the easiest thing to do... though in the future we could
+          // clear everything out rather than redirect.
+          console.log("New date selected", selectedData);
+          window.location.href = "?data=" + selectedData;
+      }
+
       /* ==== Init ==== */
       //Called multiple times as data is loaded.
       function init() {
+          if (!urlParams) {
+              urlParams = new URLSearchParams(window.location.search);
+          }
+          var mode = urlParams.get('mode');
+          var dataDate = urlParams.get('data');
+
           if (!org) {
+              //Build the date select
+              dataDate = findAndPropagateDataFromDate(orgData, dataDate);
+              orgDataObj = orgData[dataDate];
+              console.log("Using Org Data", dataDate, orgDataObj);
+              var orgDataPath = orgDataObj.path +'?' + Math.floor(Math.random() * 1000);
+
               console.log("Loading CSV...");
               d3.csv(orgDataPath, orgFromRows);
-          } else if (!joins) {
-              console.log("Joining Data...");
-              d3.csv(orgJoinPath, orgJoinData);
           } else {
               //Give the Top node a name so it isn't blank.
               org.name = "The Org";
@@ -568,22 +675,39 @@
               console.log("Sorting...");
               sortChildren(org);
               console.log("org", org);
-              console.log("Initing D3...");
-              initD3();
-              console.log("Collapsing...");
-              collapseToLevelD3(2);
-              console.log("Initing Autocomplete...");
-              initAutocomplete();
+              if (mode === "text") {
+                  document.body.innerHTML = "";
+                  printTextChildren(0, org);
+              } else if (mode === "csv") {
+                  document.body.innerHTML = "";
+                  printAugmentedCSV(org);
+              } else {
+                  console.log("Initing D3...");
+                  initD3();
+                  console.log("Collapsing...");
+                  collapseToLevelD3(2);
+                  console.log("Initing Autocomplete...");
+                  initAutocomplete();
+              }
           }
       }
     </script>
   </head>
   <body onLoad="init()">
+    <span id="dataDateSpan">
+      <select id="dataSelect" onChange="newDataSelected()">
+        <option value="XXXX-XX-XX">XXXX-XX-XX</option>
+      </select>
+    </span>
+    |
     <input id="org-search" autofocus="" type="text" name="q" placeholder="Search..." style="width:100%;max-width:600px;outline:0" autocomplete="off">
     <input type="button" value="X" onClick="clearSearch()">
     |
     <button name="Collapse Button" onClick="collapseButtonClick()">collapse to</button>
-    <input type="text" id="collapseLevel" name="collapseLevel" value="2" size="3" maxlength="3"/>
+    <input type="text" id="collapseLevel" name="collapseLevel" value="2" size="3" maxlength="3">
+    |
+    <a id="textLink" href="?mode=text">text</a>
+    <a id="csvLink" href="?mode=csv">csv</a>
     <hr>
     <div id="svg-container"></div>
   </body>

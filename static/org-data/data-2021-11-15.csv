@@ -1,0 +1,16 @@
+id,name,manager_id,title,team,location,employment,start_date
+joe_1,Joe McApple,,President,NF Productions,Washington,fte,10/03/2006
+mary_2,Mary Willford,joe_1,"Vice President, Engineering",Engineering,South Dakota,fte,9/1/2012
+roberta_3,Roberta Peterson,joe_1,"Vice President, Finance",Finance,Washington,fte,6/12/2021
+dave_4,Dave Studgy,joe_1,"Vice President, Marketing",Marketing,Washington,fte,5/7/2009
+david_5,David Markham,joe_1,"Vice President, Human Resources",HR,California,fte,1/8/2016
+peter_6,Peter Great,joe_1,"Chief of Staff",Staff,Washington,fte,4/15/2020
+jane_8,Jane Advisor,joe_1,"Technical Advisor",Advisor,Ohio,contract,4/15/2021
+hanna_21,Hanna Willford,mary_2,"Director, Infrastructure",Infrastructure,Washington,fte,5/8/2019
+bob_22,Bob Studdord,mary_2,"Director, Apps",Apps,Alabama,fte,6/12/2021
+ben_23,Ben McPearson,mary_2,"Director, Data Science",Data Science,Washington,fte,7/5/2015
+gill_31,Gill Fish,roberta_3,Senior Finance Analyst,Finance,Oregon,fte,8/6/2012
+marky_32,Marky Mark,roberta_3,Finance Analysis,Finance,Washington,fte,9/1/2017
+yueh_61,Yueh Weh,peter_6,Executive Assistant,Staff,Washington,fte,8/5/2023
+brittany_211,Brittany Lifiky,hanna_21,Architect,Infrastructure,Oregon,fte,9/10/2020
+gabriella_212,Gabriella Mymer,hanna_21,Senior Software Engineer,Infrastructure,California,contract,8/2/2018
