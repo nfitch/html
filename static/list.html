@@ -45,6 +45,7 @@
     <script type="module" src="./list/lists.js"></script>
     <script type="module" src="./list/key-handler.js"></script>
     <script type="text/javascript">
+      //'
       const DEFAULT_FILENAME = "list.json";
 
       var lists;
@@ -72,8 +73,7 @@
               "toggleHelp": toggleHelp,
               "toggleTypeMode": toggleTypeMode
           }
-          keyHandler = createKeyHandler(lists,
-                                        controls);
+          keyHandler = createKeyHandler(lists, controls);
           document.addEventListener('keydown', keyHandler.handle);
           lists.init();
 

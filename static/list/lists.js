@@ -124,7 +124,9 @@ function createLists(root, storage) {
     //Append text to the selection
     function appendSelection(s) {
         // DOM (!)
-        selection.innerText += s;
+        if (selection && selection.liststype === ELEMENT_TYPE) {
+            selection.innerText += s;
+        }
     }
 
     //Only save stuff periodically
